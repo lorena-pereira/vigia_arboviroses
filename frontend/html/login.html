@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigia Arboviroses</title>
+    <link rel="stylesheet" href="../css/login.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <div class="login-container">
+
+        <!-- lado esquerdo - as informações -->
+        <div class="login-info">
+            <div class="brand">
+                <h1>Vigia Arboviroses</h1>
+                <p>Vigilância Epidemiológica Municipal</p>
+            </div>
+
+            <div class="info-content">
+                <div class="hero-icon">
+                    <i data-lucide="activity" color="#ffffff"></i>
+                </div>
+                <h2>Monitoramento<br>epidemiológico.</h2>
+                <p class="hero-desc">Acesse dados, notificações e indicadores para apoiar a vigilância, investigação e resposta às arboviroses no município.</p>
+
+                <div class="features">
+                    <div class="feature-item">
+                        <i data-lucide="check" class="icon-check"></i>
+                        <p>Acesso restrito para equipes de vigilância</p>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="check" class="icon-check"></i>
+                        <p>Dados epidemiológicos centralizados</p>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="check" class="icon-check"></i>
+                        <p>Apoio à investigação e resposta rápida</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <p>© 2026 • Vigilância Epidemiológica Municipal</p>
+            </div>
+        </div>
+
+        <!-- lado direito - o formulário de login -->
+        <div class="login-right">
+            <div class="login-card">
+                <h1>Acesso ao<br>Vigia Arboviroses</h1>
+                <p class="subtitle">Informe suas credenciais para acessar o sistema.</p>
+
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="user">Usuário</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user" class="icon-left"></i>
+                            <input type="text" id="user" placeholder="Digite seu usuário" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="password">Senha</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="lock" class="icon-left"></i>
+                            <input type="password" id="password" placeholder="........" required>
+                            <i data-lucide="eye-off" class="icon-right" id="toggle-password"></i>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-entrar">ENTRAR</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+    
+    <script src="../javascript/login.js"></script>
+</body>
+</html>

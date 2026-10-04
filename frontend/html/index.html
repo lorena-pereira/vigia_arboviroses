@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigia Arboviroses - Painel</title>
+    
+    <link rel="stylesheet" href="../css/index.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../javascript/auth.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- menu lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-icon">
+                    <i data-lucide="activity"></i>
+                </div>
+                <h2>Vigia<br>Arboviroses</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <!-- rota atual -->
+                <a href="/index.html" class="nav-item active">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Painel Geral</span>
+                </a>
+                
+                <!-- futura tela do CRUD -->
+                <a href="#" class="nav-item">
+                    <i data-lucide="users"></i>
+                    <span>Pacientes (CRUD)</span>
+                </a>
+                
+                <a href="#" class="nav-item">
+                    <i data-lucide="file-text"></i>
+                    <span>Notificações</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="nav-item">
+                    <i data-lucide="log-out"></i>
+                    <span>Sair do Sistema</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- conteúdo principal -->
+        <main class="main-content">
+            
+            <!-- cabeçalho -->
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>Visão Geral Epidemiológica</h1>
+                    <p>Município: Vitória da Conquista - BA</p>
+                </div>
+                
+                <!-- perfil do usuário logado -->
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="user-name">Carregando...</span>
+                        <small id="user-role">Vigilância</small>
+                    </div>
+                </div>
+            </header>
+
+            <!-- conteúdo do dashboard -->
+            <div class="dashboard-content">
+                
+                <!-- cards de estatísticas -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3>Total de Pacientes</h3>
+                            <div class="icon-wrapper blue">
+                                <i data-lucide="users"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">1.240</div>
+                        <div class="stat-desc">Cadastrados no sistema</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3>Casos Prováveis (Ativos)</h3>
+                            <div class="icon-wrapper red">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">320</div>
+                        <div class="stat-desc">Aguardando investigação</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3>Denúncias Abertas</h3>
+                            <div class="icon-wrapper yellow">
+                                <i data-lucide="map-pin"></i>
+                            </div>
+                        </div>
+                        <div class="stat-value">34</div>
+                        <div class="stat-desc">Focos de risco reportados</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+
+    <script src="../javascript/index.js"></script>
+</body>
+</html>

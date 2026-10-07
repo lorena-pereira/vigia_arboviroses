@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }));
 
                 // Redireciona substituindo a página no histórico
-                window.location.replace('/index.html');
+                window.location.replace(data.redirect || '/index.html');
             } else {
                 alert(data.message || 'Erro ao realizar login.');
 

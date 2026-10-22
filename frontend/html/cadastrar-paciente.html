@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigia Arboviroses - Cadastrar Paciente</title>
+    
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/pacientes.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../javascript/auth.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- menu lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-icon">
+                    <i data-lucide="activity"></i>
+                </div>
+                <h2>Vigia<br>Arboviroses</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/index.html" class="nav-item">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Painel Geral</span>
+                </a>
+                
+                <!-- pacientes -->
+                <div class="nav-item-group active">
+                    <button class="nav-item-toggle">
+                        <div class="toggle-left">
+                            <i data-lucide="users"></i>
+                            <span>Pacientes</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="arrow-icon"></i>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="cadastrar-paciente.html" class="submenu-item active">Cadastrar Paciente</a>
+                    </div>
+                </div>
+                
+                <a href="#" class="nav-item">
+                    <i data-lucide="file-text"></i>
+                    <span>Notificações</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="nav-item">
+                    <i data-lucide="log-out"></i>
+                    <span>Sair do Sistema</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- conteúdo principal -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title">
+                    <h1>Cadastrar Paciente</h1>
+                    <p>Inserção de novos pacientes no registro municipal</p>
+                </div>
+                
+                <div class="user-profile">
+                    <div class="avatar">
+                        <i data-lucide="user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span id="user-name">Carregando...</span>
+                        <small id="user-role">Vigilância</small>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content form-container">
+                <form id="form-cadastrar-paciente" class="cadastro-form">
+                    
+                    <!-- cadastro dos dados pessoais -->
+                    <fieldset>
+                        <legend><i data-lucide="user"></i> Dados Pessoais</legend>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="cpf">CPF <span class="req">*</span></label>
+                                <input type="text" id="cpf" name="cpf" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="nome">Nome Completo <span class="req">*</span></label>
+                                <input type="text" id="nome" name="nome" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="dataDeNascimento">Data de Nascimento <span class="req">*</span></label>
+                                <input type="date" id="dataDeNascimento" name="dataDeNascimento" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="idade">Idade</label>
+                                <input type="number" id="idade" name="idade" min="0">
+                            </div>
+                            <div class="input-group">
+                                <label for="sexo">Sexo <span class="req">*</span></label>
+                                <select id="sexo" name="sexo" required>
+                                    <option value="">Selecione</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Feminino</option>
+                                    <option value="O">Outro</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="gestante">Gestante <span class="req">*</span></label>
+                                <select id="gestante" name="gestante" required>
+                                    <option value="">Selecione</option>
+                                    <option value="false">Não</option>
+                                    <option value="true">Sim</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="racaCor">Raça/Cor</label>
+                                <input type="text" id="racaCor" name="racaCor">
+                            </div>
+                            <div class="input-group">
+                                <label for="escolaridade">Escolaridade</label>
+                                <input type="text" id="escolaridade" name="escolaridade">
+                            </div>
+                            <div class="input-group">
+                                <label for="numeroSus">Número SUS <span class="req">*</span></label>
+                                <input type="text" id="numeroSus" name="numeroSus" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="nomeDaMae">Nome da Mãe</label>
+                                <input type="text" id="nomeDaMae" name="nomeDaMae">
+                            </div>
+                            <div class="input-group">
+                                <label for="telefone">Telefone Principal <span class="req">*</span></label>
+                                <input type="tel" id="telefone" name="telefone" required>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- cadastro do endereço e bairro -->
+                    <fieldset>
+                        <legend><i data-lucide="map-pin"></i> Endereço e Localização</legend>
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="cep">CEP</label>
+                                <input type="text" id="cep" name="cep">
+                            </div>
+                            <div class="input-group">
+                                <label for="logradouro">Logradouro <span class="req">*</span></label>
+                                <input type="text" id="logradouro" name="logradouro" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="numero">Número <span class="req">*</span></label>
+                                <input type="text" id="numero" name="numero" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="complemento">Complemento</label>
+                                <input type="text" id="complemento" name="complemento">
+                            </div>
+                            <div class="input-group">
+                                <label for="bairroNome">Bairro <span class="req">*</span></label>
+                                <input type="text" id="bairroNome" name="bairroNome" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="bairroRegiao">Região do Bairro</label>
+                                <input type="text" id="bairroRegiao" name="bairroRegiao">
+                            </div>
+                            <div class="input-group">
+                                <label for="distrito">Distrito <span class="req">*</span></label>
+                                <input type="text" id="distrito" name="distrito" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="municipio">Município <span class="req">*</span></label>
+                                <input type="text" id="municipio" name="municipio" value="Vitória da Conquista" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="uf">UF <span class="req">*</span></label>
+                                <input type="text" id="uf" name="uf" value="BA" maxlength="2" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="pais">País <span class="req">*</span></label>
+                                <input type="text" id="pais" name="pais" value="Brasil" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="zona">Zona (Urbana/Rural) <span class="req">*</span></label>
+                                <select id="zona" name="zona" required>
+                                    <option value="Urbana">Urbana</option>
+                                    <option value="Rural">Rural</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="pontoDeReferencia">Ponto de Referência</label>
+                                <input type="text" id="pontoDeReferencia" name="pontoDeReferencia">
+                            </div>
+                            <div class="input-group">
+                                <label for="geoCampo1">GeoCampo 1 (Latitude) <span class="req">*</span></label>
+                                <input type="text" id="geoCampo1" name="geoCampo1" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="geoCampo2">GeoCampo 2 (Longitude) <span class="req">*</span></label>
+                                <input type="text" id="geoCampo2" name="geoCampo2" required>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="form-actions">
+                        <button type="reset" class="btn-secondary">Limpar</button>
+                        <button type="submit" class="btn-primary">Cadastrar Paciente</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+    <script src="../javascript/index.js"></script>
+    <script src="../javascript/sidebar.js"></script>
+</body>
+</html>

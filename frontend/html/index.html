@@ -22,17 +22,24 @@
             </div>
             
             <nav class="sidebar-nav">
-                <!-- rota atual -->
                 <a href="/index.html" class="nav-item active">
                     <i data-lucide="layout-dashboard"></i>
                     <span>Painel Geral</span>
                 </a>
                 
-                <!-- futura tela do CRUD -->
-                <a href="#" class="nav-item">
-                    <i data-lucide="users"></i>
-                    <span>Pacientes (CRUD)</span>
-                </a>
+                <!-- pacientes -->
+                <div class="nav-item-group">
+                    <button class="nav-item-toggle">
+                        <div class="toggle-left">
+                            <i data-lucide="users"></i>
+                            <span>Pacientes</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="arrow-icon"></i>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="cadastrar-paciente.html" class="submenu-item">Cadastrar Paciente</a>
+                    </div>
+                </div>
                 
                 <a href="#" class="nav-item">
                     <i data-lucide="file-text"></i>
@@ -117,5 +124,6 @@
     </script>
 
     <script src="../javascript/index.js"></script>
+    <script src="../javascript/sidebar.js"></script>
 </body>
 </html>

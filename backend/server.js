@@ -22,6 +22,10 @@ app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/index.html'));
 });
 
+app.get('/cadastrar-paciente.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/html/cadastrar-paciente.html'));
+});
+
 // so sobe a porta quando executado diretamente (permite testar sem subir servidor)
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const port = process.env.PORT || 3000;

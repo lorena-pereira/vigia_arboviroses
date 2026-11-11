@@ -46,7 +46,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     let lastActivity = Date.now();
-    const updateActivity = () => { lastActivity = Date.now(); hideWarning(); };
+    const updateActivity = (event) => {
+        const target = event?.target;
+        const isLogoutAction = target instanceof Element && target.closest && target.closest('#logout-btn');
+
+        if (isLogoutAction) {
+            return;
+        }
+
+        lastActivity = Date.now();
+        hideWarning();
+    };
+
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach((eventName) => {
         document.addEventListener(eventName, updateActivity, { passive: true });
     });

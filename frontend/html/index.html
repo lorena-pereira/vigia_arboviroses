@@ -41,9 +41,16 @@
             </nav>
             
             <div class="sidebar-footer">
-                <a href="#" id="logout-btn" class="nav-item">
+                <div id="session-timer" class="session-timer" aria-live="polite">
+                    <div class="session-timer-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <span id="session-time">30:00</span>
+                </div>
+
+                <a href="#" id="logout-btn" class="nav-item logout-btn">
                     <i data-lucide="log-out"></i>
-                    <span>Sair do Sistema</span>
+                    <span>Encerrar sessão</span>
                 </a>
             </div>
         </aside>
@@ -69,6 +76,10 @@
                     </div>
                 </div>
             </header>
+
+            <div id="session-warning" style="display:none; margin: 0 0 16px; padding: 12px 16px; background: #fff3cd; color: #7a5100; border: 1px solid #ffe69c; border-radius: 10px; font-weight: 600;">
+                Sua sessão está inativa e expirará em breve.
+            </div>
 
             <!-- conteúdo do dashboard -->
             <div class="dashboard-content">

@@ -1,5 +1,10 @@
 // garante que o script rode após o HTML carregar
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const usuarioJaLogado = await window.validarSessao?.();
+    if (usuarioJaLogado) {
+        window.location.replace('/index.html');
+        return;
+    }
 
     // buscando os elementos HTML
     const loginForm = document.getElementById('login-form');
@@ -48,11 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // verifica se a resposta teve sucesso
             if (response.ok && data.success) {
-                // Salva o objeto completo no localStorage
-                localStorage.setItem('usuarioLogado', JSON.stringify({
+                const usuarioLogado = data.user || {
                     nome: usuario,
                     perfil: data.profile || 'Usuário'
-                }));
+                };
+
+                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
 
                 // Redireciona substituindo a página no histórico
                 window.location.replace(data.redirect || '/index.html');

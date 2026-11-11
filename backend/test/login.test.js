@@ -2,6 +2,7 @@
 import test, { before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { app } from '../server.js';
+import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
 
 let server, base;
@@ -12,6 +13,20 @@ const post = (body) => fetch(base + '/login', {
 before(() => { server = app.listen(0); base = `http://127.0.0.1:${server.address().port}`; });
 after(() => server.close());
 beforeEach(() => tentativas.clear());
+
+const loginComCookie = async () => {
+    const r = await fetch(base + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' })
+    });
+
+    const setCookie = r.headers.get('set-cookie') || '';
+    const match = setCookie.match(/sessionId=([^;]+)/);
+    assert.ok(match, 'Cookie de sessão não foi enviado no login.');
+
+    return { status: r.status, data: await r.json(), sessionId: match[1] };
+};
 
 test('credenciais corretas -> 200, perfil e redirect ao dashboard', async () => {
     const r = await post({ usuario: 'admin', senha: 'admin123' });
@@ -53,4 +68,58 @@ test('login certo no meio zera o contador', async () => {
     for (let i = 0; i < 4; i++) await post({ usuario: 'admin', senha: 'errada' });
     await post({ usuario: 'admin', senha: 'admin123' });
     for (let i = 0; i < 4; i++) assert.equal((await post({ usuario: 'admin', senha: 'errada' })).status, 401);
+});
+
+test('login cria sessão válida e endpoint de sessão aceita a requisição', async () => {
+    const login = await loginComCookie();
+    assert.equal(login.status, 200);
+
+    const sessao = await fetch(base + '/api/session', {
+        headers: { Cookie: `sessionId=${login.sessionId}` }
+    });
+
+    const data = await sessao.json();
+    assert.equal(sessao.status, 200);
+    assert.equal(data.authenticated, true);
+    assert.equal(data.user.nome, 'admin');
+    assert.equal(data.user.perfil, 'admin');
+});
+
+test('logout encerra a sessão e invalida a validação posterior', async () => {
+    const login = await loginComCookie();
+
+    const logout = await fetch(base + '/logout', {
+        method: 'POST',
+        headers: { Cookie: `sessionId=${login.sessionId}` }
+    });
+
+    const logoutData = await logout.json();
+    assert.equal(logout.status, 200);
+    assert.equal(logoutData.success, true);
+
+    const sessaoDepois = await fetch(base + '/api/session', {
+        headers: { Cookie: `sessionId=${login.sessionId}` }
+    });
+
+    assert.equal(sessaoDepois.status, 401);
+    const data = await sessaoDepois.json();
+    assert.equal(data.authenticated, false);
+});
+
+test('sessão expira automaticamente após 30 minutos', async () => {
+    const login = await loginComCookie();
+    const session = sessions.get(login.sessionId);
+    assert.ok(session);
+    assert.ok(session.expiresAt > Date.now());
+
+    session.expiresAt = Date.now() - 1000;
+
+    const resp = await fetch(base + '/api/session', {
+        headers: { Cookie: `sessionId=${login.sessionId}` }
+    });
+
+    assert.equal(resp.status, 401);
+    const data = await resp.json();
+    assert.equal(data.authenticated, false);
+    assert.equal(sessions.has(login.sessionId), false);
 });

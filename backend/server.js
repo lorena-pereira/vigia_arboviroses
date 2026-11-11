@@ -28,8 +28,17 @@ const getSessionId = (req) => parseCookies(req.headers.cookie || '').sessionId |
 export const validarSessao = (req) => {
     const sessionId = getSessionId(req);
     if (!sessionId) return null;
+
     const session = sessions.get(sessionId);
-    if (!session) return null;
+    if (!session) {
+        return null;
+    }
+
+    if (!session.expiresAt || Number(session.expiresAt) <= Date.now()) {
+        sessions.delete(sessionId);
+        return null;
+    }
+
     return session;
 };
 
@@ -45,6 +54,7 @@ app.get('/api/session', (req, res) => {
     const session = validarSessao(req);
 
     if (!session) {
+        res.clearCookie('sessionId', { path: '/' });
         return res.status(401).json({ authenticated: false, message: 'Sessão inválida.' });
     }
 

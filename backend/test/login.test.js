@@ -123,3 +123,19 @@ test('sessão expira automaticamente após 30 minutos', async () => {
     assert.equal(data.authenticated, false);
     assert.equal(sessions.has(login.sessionId), false);
 });
+
+test('cookie antigo não autoriza acesso após logout', async () => {
+    const login = await loginComCookie();
+    const sessionId = login.sessionId;
+
+    sessions.delete(sessionId);
+
+    const resp = await fetch(base + '/api/session', {
+        headers: { Cookie: `sessionId=${sessionId}` }
+    });
+
+    assert.equal(resp.status, 401);
+    const data = await resp.json();
+    assert.equal(data.authenticated, false);
+    assert.equal(sessions.has(sessionId), false);
+});

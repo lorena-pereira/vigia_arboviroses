@@ -45,22 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
 
-    let lastActivity = Date.now();
-    const updateActivity = (event) => {
-        const target = event?.target;
-        const isLogoutAction = target instanceof Element && target.closest && target.closest('#logout-btn');
-
-        if (isLogoutAction) {
-            return;
-        }
-
-        lastActivity = Date.now();
-        hideWarning();
-    };
-
-    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach((eventName) => {
-        document.addEventListener(eventName, updateActivity, { passive: true });
-    });
+    const sessionExpirationAt = Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
 
     const encerrarSessao = async () => {
         try {
@@ -74,24 +59,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const sessaoMonitor = async () => {
-        const idleMs = Date.now() - lastActivity;
-        const remainingMs = Math.max(0, 30 * 60 * 1000 - idleMs);
+        const remainingMs = Math.max(0, sessionExpirationAt - Date.now());
 
         if (sessionTime) {
             sessionTime.textContent = formatTimer(remainingMs);
         }
 
-        if (idleMs >= 30 * 60 * 1000) {
+        if (remainingMs <= 0) {
             await encerrarSessao();
             return;
         }
 
-        if (idleMs >= 25 * 60 * 1000) {
-            const restante = Math.max(0, 30 * 60 * 1000 - idleMs);
-            const segundos = Math.ceil(restante / 1000);
+        if (remainingMs <= 5 * 60 * 1000) {
+            const segundos = Math.ceil(remainingMs / 1000);
             const minutos = Math.floor(segundos / 60);
             const sobra = segundos % 60;
-            showWarning(`Sua sessão está inativa e expira em ${minutos}m ${sobra}s.`);
+            showWarning(`Sua sessão expirará em ${minutos}m ${sobra}s.`);
         } else {
             hideWarning();
         }

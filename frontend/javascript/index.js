@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if (remainingMs <= 5 * 60 * 1000) {
+        if (remainingMs <= 10 * 60 * 1000) {
             const segundos = Math.ceil(remainingMs / 1000);
             const minutos = Math.floor(segundos / 60);
             const sobra = segundos % 60;

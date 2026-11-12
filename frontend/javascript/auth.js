@@ -29,7 +29,7 @@ async function validarSessao() {
 
 window.validarSessao = validarSessao;
 
-(async function () {
+async function inicializarAutenticacao() {
     if (window.location.pathname.endsWith('/login.html')) {
         return;
     }
@@ -47,4 +47,4 @@ window.validarSessao = validarSessao;
             window.location.replace('../html/login.html');
         }
     });
-})();
+}

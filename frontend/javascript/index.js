@@ -1,12 +1,46 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado') || 'null');
-    
-    if (usuarioLogado) {
+
+    const perfilLabels = {
+        admin: 'Administrador',
+        municipio: 'Município',
+        agente_vigilancia_epidemiologica: 'Agente de Vigilância Epidemiológica',
+        agente_combate_endemias: 'Agente de Combate às Endemias'
+    };
+
+    const formatarUsuarioTopo = (dadosUsuario) => {
+        const perfil = dadosUsuario?.perfil;
+        const nome = String(dadosUsuario?.nome || dadosUsuario?.user || '').trim();
+        const cargo = perfilLabels[perfil] || 'Equipe Técnica';
+
+        if (perfil === 'municipio') {
+            return { nome: nome || 'Município', cargo };
+        }
+
+        if (perfil === 'agente_vigilancia_epidemiologica') {
+            return { nome: nome || '1202255', cargo };
+        }
+
+        if (perfil === 'agente_combate_endemias') {
+            return { nome: nome || '2202308', cargo };
+        }
+
+        return { nome: nome || 'Administrador', cargo };
+    };
+
+    const atualizarUsuarioTopo = (dadosUsuario) => {
+        if (!dadosUsuario) return;
+
+        const { nome, cargo } = formatarUsuarioTopo(dadosUsuario);
         const nameElement = document.getElementById('user-name');
         const roleElement = document.getElementById('user-role');
 
-        if (nameElement) nameElement.textContent = usuarioLogado.nome;
-        if (roleElement) roleElement.textContent = usuarioLogado.perfil === 'admin' ? 'Administrador' : 'Equipe Técnica';
+        if (nameElement) nameElement.textContent = nome;
+        if (roleElement) roleElement.textContent = cargo;
+    };
+    
+    if (usuarioLogado) {
+        atualizarUsuarioTopo(usuarioLogado);
     }
 
     const sessaoValida = await window.validarSessao?.();
@@ -17,11 +51,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const nameElement = document.getElementById('user-name');
-    const roleElement = document.getElementById('user-role');
+    atualizarUsuarioTopo(sessaoValida);
 
-    if (nameElement) nameElement.textContent = sessaoValida.nome;
-    if (roleElement) roleElement.textContent = sessaoValida.perfil === 'admin' ? 'Administrador' : 'Equipe Técnica';
+    if (sessaoValida.perfil === 'municipio') {
+        const sidebarNav = document.querySelector('.sidebar-nav');
+        const dashboardContent = document.querySelector('.dashboard-content');
+
+        if (sidebarNav) sidebarNav.style.display = 'none';
+        if (dashboardContent) dashboardContent.style.display = 'none';
+    }
 
     const sessionWarning = document.getElementById('session-warning');
     const sessionTime = document.getElementById('session-time');

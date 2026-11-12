@@ -3,5 +3,20 @@
         "user": "admin",
         "password": "admin123",
         "profile": "admin"
+    },
+    {
+        "user": "111111",
+        "password": "5678",
+        "profile": "municipio"
+    },
+    {
+        "user": "1202255",
+        "password": "1234",
+        "profile": "agente_vigilancia_epidemiologica"
+    },
+    {
+        "user": "2202308",
+        "password": "2202308",
+        "profile": "agente_combate_endemias"
     }
 ]

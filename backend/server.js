@@ -44,6 +44,30 @@ export const validarSessao = (req) => {
 
 app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+    if (req.path !== '/index.html') {
+        return next();
+    }
+
+    const session = validarSessao(req);
+
+    if (!session) {
+        return res.redirect(302, '/');
+    }
+
+    if (session.perfil === 'municipio') {
+        return res.status(403).json({
+            authenticated: true,
+            accessDenied: true,
+            perfil: 'municipio',
+            message: 'Acesso restrito para este perfil.'
+        });
+    }
+
+    return next();
+});
+
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 app.get('/', (req, res) => {

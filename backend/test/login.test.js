@@ -85,6 +85,27 @@ test('login cria sessão válida e endpoint de sessão aceita a requisição', a
     assert.equal(data.user.perfil, 'admin');
 });
 
+test('municipio nao pode acessar o dashboard pelo servidor', async () => {
+    const login = await fetch(base + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario: '111111', senha: '5678' })
+    });
+
+    const setCookie = login.headers.get('set-cookie') || '';
+    const match = setCookie.match(/sessionId=([^;]+)/);
+    assert.ok(match, 'Cookie de sessão não foi enviado para o perfil de município.');
+
+    const resp = await fetch(base + '/index.html', {
+        headers: { Cookie: `sessionId=${match[1]}` }
+    });
+
+    assert.equal(resp.status, 403);
+    const data = await resp.json();
+    assert.equal(data.accessDenied, true);
+    assert.equal(data.perfil, 'municipio');
+});
+
 test('logout encerra a sessão e invalida a validação posterior', async () => {
     const login = await loginComCookie();
 

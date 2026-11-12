@@ -1,0 +1,388 @@
+{
+  "schemaVersion": "1.0",
+  "status": "APROVADA_P7_PENDENTE_PUBLICACAO",
+  "generatedOn": "2026-11-12",
+  "roles": {
+    "ADMIN": "Administrador",
+    "TECNICO": "Técnico de Vigilância",
+    "GESTOR": "Gestor",
+    "ENDEMIAS": "Endemias"
+  },
+  "legend": {
+    "S": "PERMITIR",
+    "N": "NEGAR",
+    "A": "PERMITIR_AGREGADO",
+    "T": "PERMITIR_ATRIBUIDO_TERRITORIO",
+    "X": "PERMITIR_APOS_FILTRAR_CAMPOS"
+  },
+  "default": "DENY",
+  "functions": [
+    {
+      "id": "01",
+      "permission": "auth.self",
+      "description": "Autenticação, logout e troca da própria senha",
+      "requirements": "RF28, RF33",
+      "access": {
+        "ADMIN": "S",
+        "TECNICO": "S",
+        "GESTOR": "S",
+        "ENDEMIAS": "S"
+      },
+      "rule": "Sessão válida; primeiro acesso força troca de senha."
+    },
+    {
+      "id": "02",
+      "permission": "users.list",
+      "description": "Listar e consultar contas de usuários",
+      "requirements": "RF33",
+      "access": {
+        "ADMIN": "S",
+        "TECNICO": "N",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Não expor credenciais nem hash de senha."
+    },
+    {
+      "id": "03",
+      "permission": "users.manage",
+      "description": "Criar, editar, ativar/desativar usuários e atribuir perfil",
+      "requirements": "RF33",
+      "access": {
+        "ADMIN": "S",
+        "TECNICO": "N",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Sem exclusão física de usuários."
+    },
+    {
+      "id": "04",
+      "permission": "users.reset_password",
+      "description": "Redefinir senha de outro usuário",
+      "requirements": "RF33",
+      "access": {
+        "ADMIN": "S",
+        "TECNICO": "N",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Senha temporária e troca obrigatória no acesso."
+    },
+    {
+      "id": "05",
+      "permission": "patients.write",
+      "description": "Cadastrar e editar pacientes",
+      "requirements": "RF34",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Dados identificáveis apenas para Técnico."
+    },
+    {
+      "id": "06",
+      "permission": "patients.read_identified",
+      "description": "Consultar/buscar pacientes por nome, CPF ou CNS",
+      "requirements": "RF30, RF34",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Nem Administrador nem Gestor consultam fichas individuais."
+    },
+    {
+      "id": "07",
+      "permission": "cases.read_full",
+      "description": "Consultar ficha individual completa de caso",
+      "requirements": "RF06, RF08, RF30",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Inclui dados pessoais, clínicos e laboratoriais."
+    },
+    {
+      "id": "08",
+      "permission": "cases.write",
+      "description": "Cadastrar/editar casos, exames e prontuário",
+      "requirements": "RF03, RF06",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Somente a equipe técnica faz complementação."
+    },
+    {
+      "id": "09",
+      "permission": "cases.classify",
+      "description": "Alterar classificação e evolução do caso",
+      "requirements": "RF07, RN03",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Classificação alterada exclusivamente pelo Técnico."
+    },
+    {
+      "id": "10",
+      "permission": "sinan.import",
+      "description": "Importar Sinan e consolidar dados",
+      "requirements": "RF01, RF02",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Importação restrita à equipe técnica."
+    },
+    {
+      "id": "11",
+      "permission": "sinan.resolve_pending",
+      "description": "Ver/corrigir pendências da importação",
+      "requirements": "RF04, RF05",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Pode revelar informações identificáveis."
+    },
+    {
+      "id": "12",
+      "permission": "locations.correct",
+      "description": "Corrigir endereço ou geolocalização individual",
+      "requirements": "RF10–RF12",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Alteração somente pelo Técnico."
+    },
+    {
+      "id": "13",
+      "permission": "maps.view",
+      "description": "Ver mapa de casos e calor por território",
+      "requirements": "RF13–RF16, RF30",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "A",
+        "ENDEMIAS": "T"
+      },
+      "rule": "Gestor: bairros/agrupamentos, sem pontos de domicílio; Endemias: endereços de ordens atribuídas."
+    },
+    {
+      "id": "14",
+      "permission": "indicators.view",
+      "description": "Consultar indicadores, séries e dashboard",
+      "requirements": "RF17, RF18, RF21",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "S",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Somente estatísticas consolidadas para Gestor."
+    },
+    {
+      "id": "15",
+      "permission": "reports.export",
+      "description": "Gerar/exportar relatórios e bases",
+      "requirements": "RF19, RF30",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "X",
+        "GESTOR": "A",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Técnico: dados operacionais permitidos; Gestor: arquivo apenas agregado."
+    },
+    {
+      "id": "16",
+      "permission": "alerts.thresholds.manage",
+      "description": "Definir limiar de alerta de incidência",
+      "requirements": "RF20, RN06",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "N",
+        "GESTOR": "S",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Regra de negócio: ação do Gestor."
+    },
+    {
+      "id": "17",
+      "permission": "alerts.view",
+      "description": "Consultar alertas territoriais de incidência",
+      "requirements": "RF20",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "S",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Alertas em nível de bairro, sem exposição de pessoas."
+    },
+    {
+      "id": "18",
+      "permission": "complaints.view",
+      "description": "Visualizar denúncias de focos",
+      "requirements": "RF22–RF24",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "A",
+        "ENDEMIAS": "T"
+      },
+      "rule": "Endemias: somente denúncia do território/atribuição; sem dados do denunciante."
+    },
+    {
+      "id": "19",
+      "permission": "complaints.triage",
+      "description": "Triar/encaminhar denúncia para Endemias",
+      "requirements": "RF22, RF23",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Proposta operacional; validar com a Secretaria."
+    },
+    {
+      "id": "20",
+      "permission": "field_actions.list",
+      "description": "Consultar lista semanal de ações de bloqueio",
+      "requirements": "RF25, RF26",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "T"
+      },
+      "rule": "Endemias: somente endereço, coordenadas e referência da ação atribuída."
+    },
+    {
+      "id": "21",
+      "permission": "field_actions.update",
+      "description": "Registrar retorno de ação de campo",
+      "requirements": "RF27",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "N",
+        "GESTOR": "N",
+        "ENDEMIAS": "T"
+      },
+      "rule": "Somente Endemias na própria ação/território."
+    },
+    {
+      "id": "22",
+      "permission": "field_actions.stats",
+      "description": "Consultar resultado agregado de ações de campo",
+      "requirements": "RF25–RF27",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "A",
+        "ENDEMIAS": "T"
+      },
+      "rule": "Gestor vê totais; Endemias vê apenas ações próprias."
+    },
+    {
+      "id": "23",
+      "permission": "audit.read_metadata",
+      "description": "Ver metadados de auditoria (sem PII)",
+      "requirements": "RF31, RNF07",
+      "access": {
+        "ADMIN": "S",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Operações com dados de saúde devem ser auditadas; acesso mínimo."
+    },
+    {
+      "id": "24",
+      "permission": "audit.read_patient_access",
+      "description": "Consultar/exportar trilha de acesso a pacientes",
+      "requirements": "RF31, RNF07",
+      "access": {
+        "ADMIN": "N",
+        "TECNICO": "S",
+        "GESTOR": "N",
+        "ENDEMIAS": "N"
+      },
+      "rule": "Restrito a pessoal técnico autorizado; auditoria avançada é evolução."
+    }
+  ],
+  "constraints": {
+    "sessionRequired": true,
+    "httpUnauthenticated": 401,
+    "httpForbidden": 403,
+    "administratorHasPatientDataAccess": false,
+    "gestorPatientIdentifyingFieldsForbidden": [
+      "nome",
+      "cpf",
+      "cns",
+      "telefone",
+      "endereco_individual",
+      "coordenadas_individuais",
+      "data_nascimento",
+      "dados_clinicos"
+    ],
+    "endemiasForbiddenFields": [
+      "nome",
+      "cpf",
+      "cns",
+      "telefone",
+      "data_nascimento",
+      "exames",
+      "sintomas",
+      "cid",
+      "agravo",
+      "classificacao",
+      "evolucao",
+      "paciente_id",
+      "notificacao_id"
+    ],
+    "endemiasAllowedAssignedActionFields": [
+      "acao_id_publico",
+      "endereco",
+      "latitude",
+      "longitude",
+      "status_acao"
+    ],
+    "scopedActionAccessMustBeEnforcedServerSide": true,
+    "exportsAndGeoJSONMustApplySameProjection": true,
+    "mustFilterResponsesServerSide": true,
+    "userDeletion": "soft-disable only",
+    "actorA5PublicSubmission": "Separate public submission policy; no patient access"
+  },
+  "notes": [
+    "A e T não liberam acesso a objeto completo: devem ser implementados por consultas e DTOs específicos.",
+    "A rota de lista da Endemias jamais deve trazer dados clínicos nem permitir inferir pacientes.",
+    "Funcionalidades de prioridade Should/Could têm políticas definidas agora, ainda que a implementação seja futura.",
+    "Nomes de rotas nos testes são ilustrativos e devem ser alinhados ao projeto antes da automação."
+  ],
+  "approval": {
+    "reviewer": "P7",
+    "date": "2026-11-12",
+    "source": "Aprovação informada pelo solicitante nesta conversa",
+    "secretariatValidation": "PENDENTE"
+  }
+}

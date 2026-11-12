@@ -51,7 +51,6 @@ app.use((req, res, next) => {
     }
 
     const session = validarSessao(req);
-
     if (!session) {
         return res.redirect(302, '/');
     }

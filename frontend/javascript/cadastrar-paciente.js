@@ -8,55 +8,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataNascimentoInput = document.getElementById('dataDeNascimento');
     const camposDeTexto = ['nome', 'nomeDaMae', 'racaCor', 'escolaridade'];
 
-    // toasts de aviso
+    // Avisos locais do cadastro; integrar ao componente compartilhado na task 4.1.
     let toastTimeout;
-    function showWarning(message) {
-        let toast = document.getElementById('input-warning-toast');
-    
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'input-warning-toast';
-            Object.assign(toast.style, {
-                position: 'fixed',
-                top: '24px',
-                right: '24px',
-                backgroundColor: '#EF4444', // Vermelho (alerta)
-                color: 'white',
-                padding: '12px 20px',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                zIndex: '10000',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                opacity: '0',
-                transition: 'opacity 0.3s ease, transform 0.3s ease',
-                transform: 'translateX(20px)'
-            });
-            document.body.appendChild(toast);
+    function showToast(message, type = 'error') {
+        let region = document.getElementById('cadastro-feedback');
+        if (!region) {
+            region = document.createElement('div');
+            region.id = 'cadastro-feedback';
+            region.setAttribute('role', 'status');
+            region.setAttribute('aria-live', 'polite');
+            region.setAttribute('aria-atomic', 'true');
+            document.body.appendChild(region);
         }
-        
-        toast.innerHTML = `
-            <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i>
-            <span>${message}</span>
-        `;
-        if (window.lucide) lucide.createIcons(); 
-        
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(0)';
-        }, 10);
-
         clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(20px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        region.replaceChildren();
+        const toast = document.createElement('div');
+        toast.className = `cadastro-toast cadastro-toast--${type}`;
+        const text = document.createElement('span');
+        text.textContent = message;
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.textContent = 'Fechar';
+        close.setAttribute('aria-label', 'Fechar aviso');
+        close.addEventListener('click', () => {
+            clearTimeout(toastTimeout);
+            region.replaceChildren();
+        });
+        toast.append(text, close);
+        region.appendChild(toast);
+        toastTimeout = setTimeout(() => region.replaceChildren(), 6000);
     }
-    
+    const showWarning = message => showToast(message);
+
     /* formatações */
 
     // CPF
@@ -175,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cepLimpo.length === 8) {
                 try {
                     const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+                    if (!response.ok) throw new Error('Falha na consulta do CEP');
                     const data = await response.json();
 
                     if (!data.erro) {
@@ -184,10 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('uf').value = data.uf || 'BA';
                         document.getElementById('numero').focus();
                     } else {
-                        alert('CEP não encontrado na base de dados.');
+                        showWarning('CEP não encontrado. Confira o número ou preencha o endereço manualmente.');
                     }
                 } catch (error) {
-                    console.error('Erro na consulta do CEP:', error);
+                    showWarning('Não foi possível consultar o CEP. Preencha o endereço manualmente.');
                 }
             }
         });
@@ -195,8 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // envio do formulário
     if (form) {
+        let submitting = false;
+        const submitButton = form.querySelector('[type="submit"]');
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (submitting || !form.reportValidity()) return;
 
             const formData = new FormData(form);
             const pacienteData = Object.fromEntries(formData.entries());
@@ -206,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pacienteData.telefone) pacienteData.telefone = pacienteData.telefone.replace(/\D/g, '');
             if (pacienteData.numeroSus) pacienteData.numeroSus = pacienteData.numeroSus.replace(/\D/g, '');
 
+            submitting = true;
+            if (submitButton) submitButton.disabled = true;
+            form.setAttribute('aria-busy', 'true');
             try {
                 const response = await fetch('/api/pacientes', {
                     method: 'POST',
@@ -216,14 +206,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    alert('Paciente cadastrado com sucesso!');
+                    showToast('Paciente cadastrado com sucesso!', 'success');
                     form.reset();
                 } else {
-                    alert(data.message || 'Erro ao cadastrar paciente.');
+                    showWarning(typeof data.message === 'string' ? data.message : 'Erro ao cadastrar paciente.');
                 }
             } catch (error) {
-                console.error('Erro de conexão:', error);
-                alert('Não foi possível conectar ao servidor.');
+                showWarning('Não foi possível confirmar o cadastro. Seus dados foram mantidos; confira a conexão antes de tentar novamente.');
+            } finally {
+                submitting = false;
+                if (submitButton) submitButton.disabled = false;
+                form.removeAttribute('aria-busy');
             }
         });
     }

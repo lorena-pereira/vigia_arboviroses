@@ -159,3 +159,36 @@
 .btn-secondary:hover {
     background-color: #E2E8F0;
 }
+
+/* Avisos limitados ao cadastro; não alteram o menu nem outras telas. */
+#cadastro-feedback {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: min(440px, calc(100vw - 48px));
+    z-index: 10000;
+}
+.cadastro-toast {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 8px;
+    color: #fff;
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+    overflow-wrap: anywhere;
+}
+.cadastro-toast--success { background: #166534; }
+.cadastro-toast span { flex: 1; min-width: 0; }
+.cadastro-toast button {
+    padding: 8px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+.cadastro-toast button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.cadastro-form button:disabled { opacity: .65; cursor: wait; }

@@ -64,4 +64,6 @@ Os novos testes usam JSDOM e respostas de API simuladas e cobrem:
 | Renomear o JavaScript | Implementado e testado |
 | Trocar alert() por toasts e testar fluxo | Implementado; testes automatizados com API simulada passaram |
 
-A tarefa deve permanecer em andamento até que todos os critérios sejam atendidos. A publicação da branch e do PR ficou bloqueada: a integração do GitHub retornou HTTP 403 (Resource not accessible by integration) na tentativa de criar a árvore Git. Nenhum PR foi criado e nenhuma alteração foi publicada. O pacote contém um patch aplicável à base indicada e deve ser tratado como entrega parcial.
+A tarefa permanece em andamento até que todos os critérios sejam atendidos. A branch raiane/task-9-1-formulario foi publicada no GitHub e o PR #2 foi aberto como rascunho, com destino à branch feature/cadastro-pacientes. Os 17 testes passaram no ambiente local. Permanecem pendentes o alinhamento ao modelo aprovado, a avaliação dos alertas de dependências e a validação visual e de integração.
+
+PR: https://github.com/lorena-pereira/vigia_arboviroses/pull/2

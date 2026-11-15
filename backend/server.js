@@ -4,6 +4,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import { purgeExpiredSessions, SESSION_WARNING_MS, sessions } from './src/sessionStore.js';
+import { getSessionId, requireAuth, requirePageAuth, validarSessao } from './src/middlewares/requireAuth.js';
+
+// mantido para quem já importava validarSessao do server.js
+export { validarSessao };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,48 +18,19 @@ app.use((req, res, next) => {
     next();
 });
 
-const parseCookies = (cookieHeader = '') => {
-    return Object.fromEntries(
-        (cookieHeader.split(';').map(v => v.trim()).filter(Boolean).map(cookie => {
-            const [name, ...rest] = cookie.split('=');
-            return [name, decodeURIComponent(rest.join('='))];
-        }))
-    );
-};
-
-const getSessionId = (req) => parseCookies(req.headers.cookie || '').sessionId || null;
-
-export const validarSessao = (req) => {
-    const sessionId = getSessionId(req);
-    if (!sessionId) return null;
-
-    const session = sessions.get(sessionId);
-    if (!session) {
-        return null;
-    }
-
-    if (!session.expiresAt || Number(session.expiresAt) <= Date.now()) {
-        sessions.delete(sessionId);
-        return null;
-    }
-
-    return session;
-};
-
 app.use(cors());
 app.use(express.json());
 
+// Páginas internas só são entregues com sessão válida (7.3).
+// Deve vir antes do express.static, senão /html/index.html seria servido sem login.
+app.use(requirePageAuth);
+
 app.use((req, res, next) => {
-    if (req.path !== '/index.html') {
+    if (req.path !== '/index.html' && req.path !== '/html/index.html') {
         return next();
     }
 
-    const session = validarSessao(req);
-    if (!session) {
-        return res.redirect(302, '/');
-    }
-
-    if (session.perfil === 'municipio') {
+    if (req.session?.perfil === 'municipio') {
         return res.status(403).json({
             authenticated: true,
             accessDenied: true,
@@ -69,10 +44,13 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// ----- Rotas públicas (exceções documentadas da 7.3) -----
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/login.html'));
 });
 
+// Usada pelo front para saber se há sessão; responde 401 por conta própria.
 app.get('/api/session', (req, res) => {
     const session = validarSessao(req);
 
@@ -106,7 +84,10 @@ app.post('/logout', (req, res) => {
     return res.status(200).json({ success: true, redirect: '/html/login.html' });
 });
 
-app.use(authRoutes);
+app.use(authRoutes); // POST /login
+
+// ----- A partir daqui, toda rota /api/* exige sessão (7.3) -----
+app.use('/api', requireAuth);
 
 app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/index.html'));

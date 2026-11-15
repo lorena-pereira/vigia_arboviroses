@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import { purgeExpiredSessions, SESSION_WARNING_MS, sessions } from './src/sessionStore.js';
 import { getSessionId, requireAuth, requirePageAuth, validarSessao } from './src/middlewares/requireAuth.js';
+import { PERFIS, requireRole } from './src/middlewares/requireRole.js';
 
 // mantido para quem já importava validarSessao do server.js
 export { validarSessao };
@@ -88,6 +89,13 @@ app.use(authRoutes); // POST /login
 
 // ----- A partir daqui, toda rota /api/* exige sessão (7.3) -----
 app.use('/api', requireAuth);
+
+// ----- Restrição por perfil (8.2), conforme a matriz de permissões -----
+// Aplicada por prefixo: qualquer rota criada depois dentro desses caminhos já nasce restrita.
+// Pacientes: só o Técnico (Gestor e Administrador não recebem nome, CPF nem telefone).
+app.use('/api/pacientes', requireRole(PERFIS.TECNICO));
+// Gestão de usuários: só o Administrador.
+app.use('/api/usuarios', requireRole(PERFIS.ADMINISTRADOR));
 
 app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/index.html'));

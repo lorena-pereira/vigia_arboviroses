@@ -82,7 +82,7 @@ Esta matriz especifica permissões *perfil × funcionalidade* e o conjunto míni
 
 ### Exemplo de bloqueio e DTO (pseudocódigo)
 ```javascript
-router.get('/api/usuarios', requireRole('ADMIN'), listarUsuarios);
+router.get('/api/usuarios', requireRole('ADMINISTRADOR'), listarUsuarios);
 router.get('/api/pacientes', requireRole('TECNICO'), listarPacientes);
 router.get('/api/indicadores', requireRole('GESTOR','TECNICO'), indicadoresAgregados);
 router.get('/api/acoes-campo', requireRole('ENDEMIAS','TECNICO'), atribuirEscopoTerritorial, projetarDadosPermitidos);

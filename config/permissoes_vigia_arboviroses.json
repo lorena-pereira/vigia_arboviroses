@@ -3,7 +3,7 @@
   "status": "APROVADA_P7_PENDENTE_PUBLICACAO",
   "generatedOn": "2026-11-12",
   "roles": {
-    "ADMIN": "Administrador",
+    "ADMINISTRADOR": "Administrador",
     "TECNICO": "Técnico de Vigilância",
     "GESTOR": "Gestor",
     "ENDEMIAS": "Endemias"
@@ -23,7 +23,7 @@
       "description": "Autenticação, logout e troca da própria senha",
       "requirements": "RF28, RF33",
       "access": {
-        "ADMIN": "S",
+        "ADMINISTRADOR": "S",
         "TECNICO": "S",
         "GESTOR": "S",
         "ENDEMIAS": "S"
@@ -36,7 +36,7 @@
       "description": "Listar e consultar contas de usuários",
       "requirements": "RF33",
       "access": {
-        "ADMIN": "S",
+        "ADMINISTRADOR": "S",
         "TECNICO": "N",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -49,7 +49,7 @@
       "description": "Criar, editar, ativar/desativar usuários e atribuir perfil",
       "requirements": "RF33",
       "access": {
-        "ADMIN": "S",
+        "ADMINISTRADOR": "S",
         "TECNICO": "N",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -62,7 +62,7 @@
       "description": "Redefinir senha de outro usuário",
       "requirements": "RF33",
       "access": {
-        "ADMIN": "S",
+        "ADMINISTRADOR": "S",
         "TECNICO": "N",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -75,7 +75,7 @@
       "description": "Cadastrar e editar pacientes",
       "requirements": "RF34",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -88,7 +88,7 @@
       "description": "Consultar/buscar pacientes por nome, CPF ou CNS",
       "requirements": "RF30, RF34",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -101,7 +101,7 @@
       "description": "Consultar ficha individual completa de caso",
       "requirements": "RF06, RF08, RF30",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -114,7 +114,7 @@
       "description": "Cadastrar/editar casos, exames e prontuário",
       "requirements": "RF03, RF06",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -127,7 +127,7 @@
       "description": "Alterar classificação e evolução do caso",
       "requirements": "RF07, RN03",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -140,7 +140,7 @@
       "description": "Importar Sinan e consolidar dados",
       "requirements": "RF01, RF02",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -153,7 +153,7 @@
       "description": "Ver/corrigir pendências da importação",
       "requirements": "RF04, RF05",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -166,7 +166,7 @@
       "description": "Corrigir endereço ou geolocalização individual",
       "requirements": "RF10–RF12",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -179,7 +179,7 @@
       "description": "Ver mapa de casos e calor por território",
       "requirements": "RF13–RF16, RF30",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "A",
         "ENDEMIAS": "T"
@@ -192,7 +192,7 @@
       "description": "Consultar indicadores, séries e dashboard",
       "requirements": "RF17, RF18, RF21",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "S",
         "ENDEMIAS": "N"
@@ -205,7 +205,7 @@
       "description": "Gerar/exportar relatórios e bases",
       "requirements": "RF19, RF30",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "X",
         "GESTOR": "A",
         "ENDEMIAS": "N"
@@ -218,7 +218,7 @@
       "description": "Definir limiar de alerta de incidência",
       "requirements": "RF20, RN06",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "N",
         "GESTOR": "S",
         "ENDEMIAS": "N"
@@ -231,7 +231,7 @@
       "description": "Consultar alertas territoriais de incidência",
       "requirements": "RF20",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "S",
         "ENDEMIAS": "N"
@@ -244,7 +244,7 @@
       "description": "Visualizar denúncias de focos",
       "requirements": "RF22–RF24",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "A",
         "ENDEMIAS": "T"
@@ -257,7 +257,7 @@
       "description": "Triar/encaminhar denúncia para Endemias",
       "requirements": "RF22, RF23",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -270,7 +270,7 @@
       "description": "Consultar lista semanal de ações de bloqueio",
       "requirements": "RF25, RF26",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "T"
@@ -283,7 +283,7 @@
       "description": "Registrar retorno de ação de campo",
       "requirements": "RF27",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "N",
         "GESTOR": "N",
         "ENDEMIAS": "T"
@@ -296,7 +296,7 @@
       "description": "Consultar resultado agregado de ações de campo",
       "requirements": "RF25–RF27",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "A",
         "ENDEMIAS": "T"
@@ -309,7 +309,7 @@
       "description": "Ver metadados de auditoria (sem PII)",
       "requirements": "RF31, RNF07",
       "access": {
-        "ADMIN": "S",
+        "ADMINISTRADOR": "S",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"
@@ -322,7 +322,7 @@
       "description": "Consultar/exportar trilha de acesso a pacientes",
       "requirements": "RF31, RNF07",
       "access": {
-        "ADMIN": "N",
+        "ADMINISTRADOR": "N",
         "TECNICO": "S",
         "GESTOR": "N",
         "ENDEMIAS": "N"

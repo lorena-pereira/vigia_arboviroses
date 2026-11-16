@@ -6,6 +6,7 @@ import authRoutes from './src/routes/auth.js';
 import { purgeExpiredSessions, SESSION_WARNING_MS, sessions } from './src/sessionStore.js';
 import { getSessionId, requireAuth, requirePageAuth, validarSessao } from './src/middlewares/requireAuth.js';
 import { PERFIS, requireRole } from './src/middlewares/requireRole.js';
+import pacientesRoutes from './src/routes/pacientes.js';
 
 // mantido para quem já importava validarSessao do server.js
 export { validarSessao };
@@ -97,11 +98,16 @@ app.use('/api/pacientes', requireRole(PERFIS.TECNICO));
 // Gestão de usuários: só o Administrador.
 app.use('/api/usuarios', requireRole(PERFIS.ADMINISTRADOR));
 
+app.use(pacientesRoutes);
+
 app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/index.html'));
 });
 
-// so sobe a porta quando executado diretamente (permite testar sem subir servidor)
+app.get('/cadastrar-paciente.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/html/cadastrar-paciente.html'));
+});
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const port = process.env.PORT || 3000;
     app.listen(port, () => console.log(`Servidor iniciado na porta ${port}`));

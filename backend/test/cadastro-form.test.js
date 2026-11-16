@@ -118,3 +118,28 @@ for (const mode of ['não encontrado', 'HTTP', 'rede']) test(`CEP ${mode} mostra
     assert.match(ctx.feedback().textContent, /manual/);
     assert.equal(ctx.form.elements.logradouro.value, 'Exemplo');
 });
+
+
+test('cadastro mantém escolaridade e não exige nem envia gestante', async t => {
+    let body;
+    const ctx = await setup(t, async (url, options) => {
+        body = JSON.parse(options.body);
+        return { ok: true, json: async () => ({ success: true }) };
+    });
+    assert.equal(ctx.form.querySelector('[name="gestante"]'), null);
+    assert.equal(ctx.form.querySelector('[for="gestante"]'), null);
+    ctx.form.elements.escolaridade.value = 'Ensino médio completo';
+    assert.equal(ctx.form.reportValidity(), true);
+    ctx.submit(); await tick();
+    assert.equal(body.escolaridade, 'Ensino médio completo');
+    assert.equal(Object.hasOwn(body, 'gestante'), false);
+    assert.match(ctx.feedback().textContent, /cadastrado com sucesso/);
+});
+
+test('erro de cadastro preserva escolaridade para nova tentativa', async t => {
+    const ctx = await setup(t, async () => ({ ok: false, json: async () => ({ message: 'Tente novamente' }) }));
+    ctx.form.elements.escolaridade.value = 'Ensino superior incompleto';
+    ctx.submit(); await tick();
+    assert.equal(ctx.form.elements.escolaridade.value, 'Ensino superior incompleto');
+    assert.equal(ctx.form.querySelector('[type=submit]').disabled, false);
+});

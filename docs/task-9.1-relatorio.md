@@ -67,3 +67,19 @@ Os novos testes usam JSDOM e respostas de API simuladas e cobrem:
 A tarefa permanece em andamento até que todos os critérios sejam atendidos. A branch raiane/task-9-1-formulario foi publicada no GitHub e o PR #2 foi aberto como rascunho, com destino à branch feature/cadastro-pacientes. Os 17 testes passaram no ambiente local. Permanecem pendentes o alinhamento ao modelo aprovado, a avaliação dos alertas de dependências e a validação visual e de integração.
 
 PR: https://github.com/lorena-pereira/vigia_arboviroses/pull/2
+
+
+## Atualização de 16/11/2026 — feedback sobre o modelo
+
+Pacote incremental preparado sobre o commit 44db68fe2c0d9bb2c0dd3e57335d9121ae2101bb do PR #2.
+
+- Removido o campo Gestante do cadastro de paciente. Sem esse controle no formulário, o FormData não inclui gestante no POST.
+- Escolaridade permanece no Paciente, com nome escolaridade e formato textual já existentes. Sua obrigatoriedade não foi alterada.
+- A tela de Notificação e a API de pacientes não foram alteradas; a informação de gestação deverá ser tratada na implementação da notificação.
+- Adicionados testes de envio sem gestante, manutenção de escolaridade no payload e preservação de escolaridade em falha.
+
+Validação desta atualização: 19 testes passaram (6 de login e 13 de formulário com API simulada); git diff --check sem problemas.
+
+Esta atualização implementa o feedback encaminhado por Raiane; não equivale à aprovação integral do modelo. Na consulta ao Trello, a task 2.1 continua com o item de alinhamento de atributos/cardinalidades incompleto. A task 9.2 está em andamento com os critérios de API ainda incompletos.
+
+Continuam pendentes a conferência de TODOS os campos contra o modelo aprovado (incluindo CPF opcional, CNS, idade calculada, nomes e obrigatoriedade), revisão visual e integração real. Os alertas de dependências não foram corrigidos neste pacote. A task 9.1 deve permanecer em andamento; o PR #2 permanece em rascunho. Não é necessário esperar toda a task 9.2 para revisar o contrato, mas não se deve afirmar persistência real antes do teste de integração.

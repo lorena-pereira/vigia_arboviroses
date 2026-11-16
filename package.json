@@ -1,5 +1,19 @@
 {
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"backend/**/*.js\" \"frontend/**/*.{js,css}\"",
+    "format:check": "prettier --check \"backend/**/*.js\" \"frontend/**/*.{js,css}\"",
+    "test": "npm --prefix backend test"
+  },
   "dependencies": {
     "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1"
   }
 }

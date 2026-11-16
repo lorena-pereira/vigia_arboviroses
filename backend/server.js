@@ -3,8 +3,17 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
-import { purgeExpiredSessions, SESSION_WARNING_MS, sessions } from './src/sessionStore.js';
-import { getSessionId, requireAuth, requirePageAuth, validarSessao } from './src/middlewares/requireAuth.js';
+import {
+    purgeExpiredSessions,
+    SESSION_WARNING_MS,
+    sessions,
+} from './src/sessionStore.js';
+import {
+    getSessionId,
+    requireAuth,
+    requirePageAuth,
+    validarSessao,
+} from './src/middlewares/requireAuth.js';
 import { PERFIS, requireRole } from './src/middlewares/requireRole.js';
 import pacientesRoutes from './src/routes/pacientes.js';
 
@@ -37,7 +46,7 @@ app.use((req, res, next) => {
             authenticated: true,
             accessDenied: true,
             perfil: 'municipio',
-            message: 'Acesso restrito para este perfil.'
+            message: 'Acesso restrito para este perfil.',
         });
     }
 
@@ -58,10 +67,15 @@ app.get('/api/session', (req, res) => {
 
     if (!session) {
         res.clearCookie('sessionId', { path: '/' });
-        return res.status(401).json({ authenticated: false, message: 'Sessão inválida.' });
+        return res
+            .status(401)
+            .json({ authenticated: false, message: 'Sessão inválida.' });
     }
 
-    const remainingMs = Math.max(0, Number(session.expiresAt || 0) - Date.now());
+    const remainingMs = Math.max(
+        0,
+        Number(session.expiresAt || 0) - Date.now()
+    );
     const warning = remainingMs <= SESSION_WARNING_MS;
 
     return res.status(200).json({
@@ -70,8 +84,8 @@ app.get('/api/session', (req, res) => {
         expiresInMs: remainingMs,
         user: {
             nome: session.usuario,
-            perfil: session.perfil
-        }
+            perfil: session.perfil,
+        },
     });
 });
 
@@ -83,7 +97,9 @@ app.post('/logout', (req, res) => {
     }
 
     res.clearCookie('sessionId', { path: '/' });
-    return res.status(200).json({ success: true, redirect: '/html/login.html' });
+    return res
+        .status(200)
+        .json({ success: true, redirect: '/html/login.html' });
 });
 
 app.use(authRoutes); // POST /login
@@ -105,7 +121,9 @@ app.get('/index.html', (req, res) => {
 });
 
 app.get('/cadastrar-paciente.html', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/html/cadastrar-paciente.html'));
+    res.sendFile(
+        path.join(__dirname, '../frontend/html/cadastrar-paciente.html')
+    );
 });
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -2,7 +2,7 @@ async function validarSessao() {
     try {
         const response = await fetch('/api/session', {
             method: 'GET',
-            credentials: 'same-origin'
+            credentials: 'same-origin',
         });
 
         const data = await response.json();
@@ -11,15 +11,18 @@ async function validarSessao() {
             return null;
         }
 
-        localStorage.setItem('usuarioLogado', JSON.stringify({
-            nome: data.user.nome,
-            perfil: data.user.perfil
-        }));
+        localStorage.setItem(
+            'usuarioLogado',
+            JSON.stringify({
+                nome: data.user.nome,
+                perfil: data.user.perfil,
+            })
+        );
 
         return {
             ...data.user,
             warning: Boolean(data.warning),
-            expiresInMs: Number(data.expiresInMs || 0)
+            expiresInMs: Number(data.expiresInMs || 0),
         };
     } catch (error) {
         console.error('Erro ao validar sessão:', error);

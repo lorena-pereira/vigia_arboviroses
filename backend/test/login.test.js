@@ -6,11 +6,17 @@ import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
 
 let server, base;
-const post = (body) => fetch(base + '/login', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-}).then(async r => ({ status: r.status, data: await r.json() }));
+const post = (body) =>
+    fetch(base + '/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    }).then(async (r) => ({ status: r.status, data: await r.json() }));
 
-before(() => { server = app.listen(0); base = `http://127.0.0.1:${server.address().port}`; });
+before(() => {
+    server = app.listen(0);
+    base = `http://127.0.0.1:${server.address().port}`;
+});
 after(() => server.close());
 beforeEach(() => tentativas.clear());
 
@@ -18,7 +24,7 @@ const loginComCookie = async () => {
     const r = await fetch(base + '/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' })
+        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' }),
     });
 
     const setCookie = r.headers.get('set-cookie') || '';
@@ -49,25 +55,41 @@ test('campos vazios -> 400', async () => {
 
 test('bloqueia na 5a tentativa errada e recusa mesmo com a senha certa', async () => {
     for (let i = 1; i <= 4; i++) {
-        assert.equal((await post({ usuario: 'admin', senha: 'errada' })).status, 401, `tentativa ${i}`);
+        assert.equal(
+            (await post({ usuario: 'admin', senha: 'errada' })).status,
+            401,
+            `tentativa ${i}`
+        );
     }
     const quinta = await post({ usuario: 'admin', senha: 'errada' });
     assert.equal(quinta.status, 429);
     assert.equal(quinta.data.bloqueado, true);
-    assert.equal((await post({ usuario: 'admin', senha: 'admin123' })).status, 429);
+    assert.equal(
+        (await post({ usuario: 'admin', senha: 'admin123' })).status,
+        429
+    );
 });
 
 test('apos os 15 min o bloqueio expira', async () => {
-    for (let i = 0; i < 5; i++) await post({ usuario: 'admin', senha: 'errada' });
+    for (let i = 0; i < 5; i++)
+        await post({ usuario: 'admin', senha: 'errada' });
     tentativas.get('admin').bloqueadoAte = Date.now() - 1000; // simula 15 min depois
-    assert.equal((await post({ usuario: 'admin', senha: 'admin123' })).status, 200);
+    assert.equal(
+        (await post({ usuario: 'admin', senha: 'admin123' })).status,
+        200
+    );
     assert.equal(tentativas.has('admin'), false);
 });
 
 test('login certo no meio zera o contador', async () => {
-    for (let i = 0; i < 4; i++) await post({ usuario: 'admin', senha: 'errada' });
+    for (let i = 0; i < 4; i++)
+        await post({ usuario: 'admin', senha: 'errada' });
     await post({ usuario: 'admin', senha: 'admin123' });
-    for (let i = 0; i < 4; i++) assert.equal((await post({ usuario: 'admin', senha: 'errada' })).status, 401);
+    for (let i = 0; i < 4; i++)
+        assert.equal(
+            (await post({ usuario: 'admin', senha: 'errada' })).status,
+            401
+        );
 });
 
 test('login cria sessão válida e endpoint de sessão aceita a requisição', async () => {
@@ -75,7 +97,7 @@ test('login cria sessão válida e endpoint de sessão aceita a requisição', a
     assert.equal(login.status, 200);
 
     const sessao = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${login.sessionId}` }
+        headers: { Cookie: `sessionId=${login.sessionId}` },
     });
 
     const data = await sessao.json();
@@ -89,15 +111,18 @@ test('municipio nao pode acessar o dashboard pelo servidor', async () => {
     const login = await fetch(base + '/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: '111111', senha: '5678' })
+        body: JSON.stringify({ usuario: '111111', senha: '5678' }),
     });
 
     const setCookie = login.headers.get('set-cookie') || '';
     const match = setCookie.match(/sessionId=([^;]+)/);
-    assert.ok(match, 'Cookie de sessão não foi enviado para o perfil de município.');
+    assert.ok(
+        match,
+        'Cookie de sessão não foi enviado para o perfil de município.'
+    );
 
     const resp = await fetch(base + '/index.html', {
-        headers: { Cookie: `sessionId=${match[1]}` }
+        headers: { Cookie: `sessionId=${match[1]}` },
     });
 
     assert.equal(resp.status, 403);
@@ -111,7 +136,7 @@ test('logout encerra a sessão e invalida a validação posterior', async () => 
 
     const logout = await fetch(base + '/logout', {
         method: 'POST',
-        headers: { Cookie: `sessionId=${login.sessionId}` }
+        headers: { Cookie: `sessionId=${login.sessionId}` },
     });
 
     const logoutData = await logout.json();
@@ -119,7 +144,7 @@ test('logout encerra a sessão e invalida a validação posterior', async () => 
     assert.equal(logoutData.success, true);
 
     const sessaoDepois = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${login.sessionId}` }
+        headers: { Cookie: `sessionId=${login.sessionId}` },
     });
 
     assert.equal(sessaoDepois.status, 401);
@@ -136,7 +161,7 @@ test('sessão expira automaticamente após 30 minutos', async () => {
     session.expiresAt = Date.now() - 1000;
 
     const resp = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${login.sessionId}` }
+        headers: { Cookie: `sessionId=${login.sessionId}` },
     });
 
     assert.equal(resp.status, 401);
@@ -152,7 +177,7 @@ test('cookie antigo não autoriza acesso após logout', async () => {
     sessions.delete(sessionId);
 
     const resp = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${sessionId}` }
+        headers: { Cookie: `sessionId=${sessionId}` },
     });
 
     assert.equal(resp.status, 401);

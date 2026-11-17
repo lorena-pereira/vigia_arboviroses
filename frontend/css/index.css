@@ -7,10 +7,10 @@
 }
 
 body {
-    background-color: #F8FAFC;
-    color: #0F172A;
+    background-color: #f8fafc;
+    color: #0f172a;
     height: 100vh;
-    overflow: hidden; 
+    overflow: hidden;
 }
 
 .app-container {
@@ -21,8 +21,8 @@ body {
 /* menu lateral  */
 .sidebar {
     width: 260px;
-    background-color: #0F172A;
-    color: #FFFFFF;
+    background-color: #0f172a;
+    color: #ffffff;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -63,7 +63,7 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
-    color: #94A3B8;
+    color: #94a3b8;
     text-decoration: none;
     border-radius: 8px;
     font-size: 14px;
@@ -73,13 +73,13 @@ body {
 
 .nav-item:hover {
     background-color: rgba(255, 255, 255, 0.05);
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 .nav-item.active {
     background-color: rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
-    border-left: 4px solid #3B82F6; 
+    color: #ffffff;
+    border-left: 4px solid #3b82f6;
 }
 
 .nav-item i {
@@ -102,9 +102,13 @@ body {
     gap: 10px;
     padding: 10px 12px;
     border-radius: 10px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(15, 23, 42, 0.65));
+    background: linear-gradient(
+        135deg,
+        rgba(59, 130, 246, 0.18),
+        rgba(15, 23, 42, 0.65)
+    );
     border: 1px solid rgba(96, 165, 250, 0.35);
-    color: #E2E8F0;
+    color: #e2e8f0;
     font-weight: 700;
     letter-spacing: 0.04em;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
@@ -118,7 +122,7 @@ body {
     height: 28px;
     border-radius: 8px;
     background: rgba(59, 130, 246, 0.15);
-    color: #BFDBFE;
+    color: #bfdbfe;
 }
 
 .session-timer-icon i {
@@ -128,18 +132,18 @@ body {
 
 #session-time {
     font-size: 14px;
-    color: #F8FAFC;
+    color: #f8fafc;
 }
 
 .logout-btn {
     background: rgba(239, 68, 68, 0.08);
     border: 1px solid rgba(239, 68, 68, 0.18);
-    color: #FECACA;
+    color: #fecaca;
 }
 
 .logout-btn:hover {
     background: rgba(239, 68, 68, 0.12);
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 .nav-item-toggle {
@@ -150,7 +154,7 @@ body {
     background: none;
     border: none;
     padding: 12px 16px;
-    color: #94A3B8;
+    color: #94a3b8;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -160,7 +164,7 @@ body {
 
 .nav-item-toggle:hover {
     background-color: rgba(255, 255, 255, 0.05);
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 .toggle-left {
@@ -197,15 +201,16 @@ body {
 }
 
 .submenu-item {
-    color: #94A3B8;
+    color: #94a3b8;
     text-decoration: none;
     font-size: 13px;
     padding: 8px 0;
     transition: color 0.2s;
 }
 
-.submenu-item:hover, .submenu-item.active {
-    color: #FFFFFF;
+.submenu-item:hover,
+.submenu-item.active {
+    color: #ffffff;
 }
 
 /* conteúdo principal */
@@ -218,24 +223,24 @@ body {
 
 /* cabeçalho */
 .topbar {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
     padding: 20px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #E2E8F0;
+    border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
 
 .page-title h1 {
     font-size: 22px;
     font-weight: 700;
-    color: #0F172A;
+    color: #0f172a;
 }
 
 .page-title p {
     font-size: 13px;
-    color: #64748B;
+    color: #64748b;
     margin-top: 4px;
 }
 
@@ -246,8 +251,8 @@ body {
 }
 
 .avatar {
-    background-color: #E2E8F0;
-    color: #64748B;
+    background-color: #e2e8f0;
+    color: #64748b;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -269,7 +274,7 @@ body {
 
 .user-info small {
     font-size: 12px;
-    color: #64748B;
+    color: #64748b;
 }
 
 /* conteúdo do dashboard */
@@ -288,11 +293,11 @@ body {
 }
 
 .stat-card {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
     padding: 24px;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid #E2E8F0;
+    border: 1px solid #e2e8f0;
 }
 
 .stat-header {
@@ -304,7 +309,7 @@ body {
 
 .stat-header h3 {
     font-size: 14px;
-    color: #64748B;
+    color: #64748b;
     font-weight: 600;
 }
 
@@ -317,29 +322,29 @@ body {
     justify-content: center;
 }
 
-.icon-wrapper.blue { 
-    background-color: #EFF6FF; 
-    color: #3B82F6; 
+.icon-wrapper.blue {
+    background-color: #eff6ff;
+    color: #3b82f6;
 }
 
-.icon-wrapper.red { 
-    background-color: #FEF2F2; 
-    color: #EF4444; 
+.icon-wrapper.red {
+    background-color: #fef2f2;
+    color: #ef4444;
 }
 
-.icon-wrapper.yellow { 
-    background-color: #FEFCE8; 
-    color: #EAB308; 
+.icon-wrapper.yellow {
+    background-color: #fefce8;
+    color: #eab308;
 }
 
 .stat-value {
     font-size: 32px;
     font-weight: 700;
-    color: #0F172A;
+    color: #0f172a;
     margin-bottom: 8px;
 }
 
 .stat-desc {
     font-size: 13px;
-    color: #94A3B8;
+    color: #94a3b8;
 }

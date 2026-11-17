@@ -2,7 +2,7 @@ async function validarSessao() {
     try {
         const response = await fetch('/api/session', {
             method: 'GET',
-            credentials: 'same-origin'
+            credentials: 'same-origin',
         });
 
         const data = await response.json();
@@ -11,15 +11,18 @@ async function validarSessao() {
             return null;
         }
 
-        localStorage.setItem('usuarioLogado', JSON.stringify({
-            nome: data.user.nome,
-            perfil: data.user.perfil
-        }));
+        localStorage.setItem(
+            'usuarioLogado',
+            JSON.stringify({
+                nome: data.user.nome,
+                perfil: data.user.perfil,
+            })
+        );
 
         return {
             ...data.user,
             warning: Boolean(data.warning),
-            expiresInMs: Number(data.expiresInMs || 0)
+            expiresInMs: Number(data.expiresInMs || 0),
         };
     } catch (error) {
         console.error('Erro ao validar sessão:', error);
@@ -31,20 +34,25 @@ window.validarSessao = validarSessao;
 
 async function inicializarAutenticacao() {
     if (window.location.pathname.endsWith('/login.html')) {
-        return;
+        return null;
     }
 
     const usuario = await validarSessao();
 
     if (!usuario) {
         localStorage.removeItem('usuarioLogado');
-        window.location.replace('../html/login.html');
+        window.location.replace('/html/login.html');
+        return null;
     }
 
     window.addEventListener('pageshow', async (event) => {
         if (event.persisted && !(await validarSessao())) {
             localStorage.removeItem('usuarioLogado');
-            window.location.replace('../html/login.html');
+            window.location.replace('/html/login.html');
         }
     });
+
+    return usuario;
 }
+
+window.inicializarAutenticacao = inicializarAutenticacao;

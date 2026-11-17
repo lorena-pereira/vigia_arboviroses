@@ -1,16 +1,20 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado') || 'null');
+    const usuarioLogado = JSON.parse(
+        localStorage.getItem('usuarioLogado') || 'null'
+    );
 
     const perfilLabels = {
         admin: 'Administrador',
         municipio: 'Município',
         agente_vigilancia_epidemiologica: 'Agente de Vigilância Epidemiológica',
-        agente_combate_endemias: 'Agente de Combate às Endemias'
+        agente_combate_endemias: 'Agente de Combate às Endemias',
     };
 
     const formatarUsuarioTopo = (dadosUsuario) => {
         const perfil = dadosUsuario?.perfil;
-        const nome = String(dadosUsuario?.nome || dadosUsuario?.user || '').trim();
+        const nome = String(
+            dadosUsuario?.nome || dadosUsuario?.user || ''
+        ).trim();
         const cargo = perfilLabels[perfil] || 'Equipe Técnica';
 
         if (perfil === 'municipio') {
@@ -38,18 +42,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (nameElement) nameElement.textContent = nome;
         if (roleElement) roleElement.textContent = cargo;
     };
-    
+
     if (usuarioLogado) {
         atualizarUsuarioTopo(usuarioLogado);
     }
 
-    const sessaoValida = await window.validarSessao?.();
+    const sessaoValida = await window.inicializarAutenticacao();
 
-    if (!sessaoValida) {
-        localStorage.removeItem('usuarioLogado');
-        window.location.replace('../html/login.html');
-        return;
-    }
+    if (!sessaoValida) return;
 
     atualizarUsuarioTopo(sessaoValida);
 
@@ -85,13 +85,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
 
-    let sessionExpirationAt = Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
+    let sessionExpirationAt =
+        Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
 
     const renovarSessao = async () => {
         try {
             const response = await fetch('/api/session', {
                 method: 'GET',
-                credentials: 'same-origin'
+                credentials: 'same-origin',
             });
 
             if (!response.ok) {
@@ -101,7 +102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const data = await response.json();
             if (data.authenticated) {
-                sessionExpirationAt = Date.now() + (Number(data.expiresInMs) || 30 * 60 * 1000);
+                sessionExpirationAt =
+                    Date.now() + (Number(data.expiresInMs) || 30 * 60 * 1000);
                 hideWarning();
             }
         } catch (error) {
@@ -117,7 +119,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const encerrarSessao = async () => {
         try {
-            await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+            await fetch('/logout', {
+                method: 'POST',
+                credentials: 'same-origin',
+            });
         } catch (error) {
             console.error('Erro ao encerrar sessão:', error);
         }
@@ -142,7 +147,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const segundos = Math.ceil(remainingMs / 1000);
             const minutos = Math.floor(segundos / 60);
             const sobra = segundos % 60;
-            showWarning(`Sua sessão expirará em ${minutos}m ${sobra}s. Deseja continuar?`);
+            showWarning(
+                `Sua sessão expirará em ${minutos}m ${sobra}s. Deseja continuar?`
+            );
         } else {
             hideWarning();
         }
@@ -151,7 +158,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(sessaoMonitor, 1000);
 
     const logoutBtn = document.getElementById('logout-btn');
-    
+
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();

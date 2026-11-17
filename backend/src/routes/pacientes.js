@@ -7,7 +7,7 @@ const pacientesFilePath = new URL('../../data/pacientes.json', import.meta.url);
 router.post('/api/pacientes', (req, res) => {
     try {
         const novoPaciente = req.body;
-        
+
         novoPaciente.id = Date.now().toString();
         novoPaciente.dataCadastro = new Date().toISOString();
 
@@ -20,13 +20,19 @@ router.post('/api/pacientes', (req, res) => {
         }
 
         pacientes.push(novoPaciente);
-        
+
         fs.writeFileSync(pacientesFilePath, JSON.stringify(pacientes, null, 4));
 
-        res.status(201).json({ success: true, message: 'Paciente salvo com sucesso' });
+        res.status(201).json({
+            success: true,
+            message: 'Paciente salvo com sucesso',
+        });
     } catch (error) {
         console.error('Erro ao salvar paciente:', error);
-        res.status(500).json({ success: false, message: 'Erro interno no servidor' });
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno no servidor',
+        });
     }
 });
 

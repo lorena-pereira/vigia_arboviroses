@@ -28,7 +28,7 @@ export function autenticar(usuario, senha) {
         return {
             ok: false,
             motivo: 'bloqueado',
-            minutosRestantes: Math.ceil((estado.bloqueadoAte - agora) / 60000)
+            minutosRestantes: Math.ceil((estado.bloqueadoAte - agora) / 60000),
         };
     }
 
@@ -39,7 +39,9 @@ export function autenticar(usuario, senha) {
     }
 
     // 2) confere usuario e senha
-    const user = lerUsuarios().find(u => u.user === usuario && u.password === senha);
+    const user = lerUsuarios().find(
+        (u) => u.user === usuario && u.password === senha
+    );
 
     if (user) {
         tentativas.delete(usuario);
@@ -53,7 +55,11 @@ export function autenticar(usuario, senha) {
     if (estado.falhas >= MAX_TENTATIVAS) {
         estado.bloqueadoAte = agora + MINUTOS_BLOQUEIO * 60000;
         tentativas.set(usuario, estado);
-        return { ok: false, motivo: 'bloqueado', minutosRestantes: MINUTOS_BLOQUEIO };
+        return {
+            ok: false,
+            motivo: 'bloqueado',
+            minutosRestantes: MINUTOS_BLOQUEIO,
+        };
     }
 
     tentativas.set(usuario, estado);

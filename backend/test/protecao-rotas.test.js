@@ -9,20 +9,27 @@ import { requireAuth } from '../src/middlewares/requireAuth.js';
 
 let server, base;
 
-before(() => { server = app.listen(0); base = `http://127.0.0.1:${server.address().port}`; });
-after(() => server.close());
-beforeEach(() => { tentativas.clear(); sessions.clear(); });
-
-const get = (p, cookie) => fetch(base + p, {
-    redirect: 'manual',
-    headers: cookie ? { Cookie: cookie } : {}
+before(() => {
+    server = app.listen(0);
+    base = `http://127.0.0.1:${server.address().port}`;
 });
+after(() => server.close());
+beforeEach(() => {
+    tentativas.clear();
+    sessions.clear();
+});
+
+const get = (p, cookie) =>
+    fetch(base + p, {
+        redirect: 'manual',
+        headers: cookie ? { Cookie: cookie } : {},
+    });
 
 const login = async () => {
     const r = await fetch(base + '/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' })
+        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' }),
     });
     const m = (r.headers.get('set-cookie') || '').match(/sessionId=([^;]+)/);
     assert.ok(m, 'login não devolveu cookie de sessão');
@@ -51,7 +58,10 @@ test('sem sessão: qualquer rota /api/* responde 401 em JSON', async () => {
 });
 
 test('cookie com sessão inexistente é tratado como sem sessão', async () => {
-    assert.equal((await get('/html/index.html', 'sessionId=falso')).status, 302);
+    assert.equal(
+        (await get('/html/index.html', 'sessionId=falso')).status,
+        302
+    );
     assert.equal((await get('/api/pacientes', 'sessionId=falso')).status, 401);
 });
 
@@ -89,16 +99,22 @@ test('com sessão: página interna é entregue', async () => {
 test('com sessão: requireAuth deixa passar e expõe req.session', async () => {
     // app de teste isolado, para não depender de rotas /api que ainda não existem
     const mini = express();
-    mini.get('/api/eu', requireAuth, (req, res) => res.json({ perfil: req.session.perfil }));
+    mini.get('/api/eu', requireAuth, (req, res) =>
+        res.json({ perfil: req.session.perfil })
+    );
     const s = mini.listen(0);
     try {
         const cookie = await login();
         const sessionId = cookie.split('=')[1];
-        const r = await fetch(`http://127.0.0.1:${s.address().port}/api/eu`, { headers: { Cookie: cookie } });
+        const r = await fetch(`http://127.0.0.1:${s.address().port}/api/eu`, {
+            headers: { Cookie: cookie },
+        });
         assert.equal(r.status, 200);
         assert.equal((await r.json()).perfil, sessions.get(sessionId).perfil);
 
-        const semLogin = await fetch(`http://127.0.0.1:${s.address().port}/api/eu`);
+        const semLogin = await fetch(
+            `http://127.0.0.1:${s.address().port}/api/eu`
+        );
         assert.equal(semLogin.status, 401);
     } finally {
         s.close();

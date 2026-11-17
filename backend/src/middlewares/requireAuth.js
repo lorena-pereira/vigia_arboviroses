@@ -4,14 +4,20 @@ import { sessions } from '../sessionStore.js';
 // Tudo que não estiver aqui e for uma página .html exige sessão válida.
 export const PAGINAS_PUBLICAS = ['/', '/html/login.html'];
 
-const parseCookies = (cookieHeader = '') => Object.fromEntries(
-    cookieHeader.split(';').map(v => v.trim()).filter(Boolean).map(cookie => {
-        const [name, ...rest] = cookie.split('=');
-        return [name, decodeURIComponent(rest.join('='))];
-    })
-);
+const parseCookies = (cookieHeader = '') =>
+    Object.fromEntries(
+        cookieHeader
+            .split(';')
+            .map((v) => v.trim())
+            .filter(Boolean)
+            .map((cookie) => {
+                const [name, ...rest] = cookie.split('=');
+                return [name, decodeURIComponent(rest.join('='))];
+            })
+    );
 
-export const getSessionId = (req) => parseCookies(req.headers.cookie || '').sessionId || null;
+export const getSessionId = (req) =>
+    parseCookies(req.headers.cookie || '').sessionId || null;
 
 // Retorna a sessão do cookie, ou null se não existir ou estiver expirada.
 export const validarSessao = (req) => {
@@ -36,7 +42,12 @@ export function requireAuth(req, res, next) {
 
     if (!session) {
         res.clearCookie('sessionId', { path: '/' });
-        return res.status(401).json({ authenticated: false, message: 'Sessão inválida ou expirada.' });
+        return res
+            .status(401)
+            .json({
+                authenticated: false,
+                message: 'Sessão inválida ou expirada.',
+            });
     }
 
     req.session = session;

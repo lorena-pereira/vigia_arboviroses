@@ -85,3 +85,30 @@ As rotas `/api/pacientes` exigem sessão autenticada com perfil `tecnico_vigilan
 A tela `frontend/html/cadastrar-paciente.html` foi integrada ao backend com persistência MySQL. O formulário encaminha ao endpoint `POST /api/pacientes` os campos atualmente cobertos pela migração inicial: nome, CPF, CNS, telefone e data de nascimento. Os demais campos visuais do formulário ainda não fazem parte da tabela `patients` e, portanto, não são persistidos nesta versão.
 
 A página é acessada pelo menu **Pacientes → Cadastrar Paciente**. O endpoint continua protegido pelo perfil Técnico de Vigilância.
+
+## Documentação do projeto
+
+A documentação do Vigia Arboviroses está organizada na pasta `docs/`, separada por finalidade.
+
+### Infraestrutura
+
+- [Guia de configuração Docker](docs/infraestrutura/README_DOCKER.md)
+
+### Tarefas de desenvolvimento
+
+- [Task 3 — Integração MySQL](docs/tarefas/TASK_3_INTEGRACAO_MYSQL.md)
+- [Tasks 4 e 5 — Camadas do sistema](docs/tarefas/TASKS_4_E_5_CAMADAS.md)
+- [Task 6 — Validação de pacientes](docs/tarefas/TASK_6_VALIDACAO_PACIENTES.md)
+
+### Relatórios de entregas
+
+- [Relatório geral de entregas](docs/entregas/RELATORIO_GERAL_ENTREGAS.md)
+- [Resultado da Task 6.9.3](docs/entregas/RESULTADO_TASK_6_9_3.md)
+
+### Organização
+
+- `backend/`: API, autenticação, regras de negócio e testes.
+- `frontend/`: páginas, estilos e scripts da interface.
+- `config/`: arquivos de configuração.
+- `docs/`: documentação técnica, tarefas e relatórios.
+- `.github/workflows/`: automações do GitHub Actions.

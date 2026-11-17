@@ -36,7 +36,7 @@ const loginComCookie = async () => {
 
 test('credenciais corretas -> 200, perfil e redirect ao dashboard', async () => {
     const r = await post({ usuario: 'admin', senha: 'admin123' });
-    assert.equal(r.status, 999);
+    assert.equal(r.status, 200);
     assert.equal(r.data.profile, 'admin');
     assert.equal(r.data.redirect, '/index.html');
 });

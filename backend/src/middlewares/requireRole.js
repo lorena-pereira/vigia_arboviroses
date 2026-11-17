@@ -38,24 +38,20 @@ export function requireRole(...permitidos) {
 
     return function verificarPerfil(req, res, next) {
         if (!req.session) {
-            return res
-                .status(401)
-                .json({
-                    authenticated: false,
-                    message: 'Sessão inválida ou expirada.',
-                });
+            return res.status(401).json({
+                authenticated: false,
+                message: 'Sessão inválida ou expirada.',
+            });
         }
 
         const perfil = normalizarPerfil(req.session.perfil);
 
         if (!perfil || !permitidos.includes(perfil)) {
             // resposta mínima: não revela nada sobre o recurso
-            return res
-                .status(403)
-                .json({
-                    authenticated: true,
-                    message: 'Acesso negado para este perfil.',
-                });
+            return res.status(403).json({
+                authenticated: true,
+                message: 'Acesso negado para este perfil.',
+            });
         }
 
         req.perfil = perfil;

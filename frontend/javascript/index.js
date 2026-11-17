@@ -47,13 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         atualizarUsuarioTopo(usuarioLogado);
     }
 
-    const sessaoValida = await window.validarSessao?.();
+    const sessaoValida = await window.inicializarAutenticacao();
 
-    if (!sessaoValida) {
-        localStorage.removeItem('usuarioLogado');
-        window.location.replace('../html/login.html');
-        return;
-    }
+    if (!sessaoValida) return;
 
     atualizarUsuarioTopo(sessaoValida);
 

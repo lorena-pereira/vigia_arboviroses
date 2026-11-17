@@ -34,20 +34,25 @@ window.validarSessao = validarSessao;
 
 async function inicializarAutenticacao() {
     if (window.location.pathname.endsWith('/login.html')) {
-        return;
+        return null;
     }
 
     const usuario = await validarSessao();
 
     if (!usuario) {
         localStorage.removeItem('usuarioLogado');
-        window.location.replace('../html/login.html');
+        window.location.replace('/html/login.html');
+        return null;
     }
 
     window.addEventListener('pageshow', async (event) => {
         if (event.persisted && !(await validarSessao())) {
             localStorage.removeItem('usuarioLogado');
-            window.location.replace('../html/login.html');
+            window.location.replace('/html/login.html');
         }
     });
+
+    return usuario;
 }
+
+window.inicializarAutenticacao = inicializarAutenticacao;

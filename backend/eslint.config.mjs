@@ -6,7 +6,7 @@ export default [
     js.configs.recommended,
     prettierConfig,
     {
-        ignores: ['node_modules/**', 'dist/**']
+        ignores: ['node_modules/**', 'dist/**'],
     },
     {
         languageOptions: {
@@ -14,13 +14,13 @@ export default [
             sourceType: 'module',
             globals: {
                 ...globals.node,
-                ...globals.jest
-            }
+                ...globals.jest,
+            },
         },
         rules: {
             'linebreak-style': 'off',
             'no-unused-vars': 'warn',
-            'no-console': 'off'
-        }
-    }
+            'no-console': 'off',
+        },
+    },
 ];

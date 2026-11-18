@@ -53,68 +53,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     atualizarUsuarioTopo(sessaoValida);
 
+    let sessionExpirationAt =
+        Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
+
     if (sessaoValida.perfil === 'municipio') {
         const sidebarNav = document.querySelector('.sidebar-nav');
         const dashboardContent = document.querySelector('.dashboard-content');
 
         if (sidebarNav) sidebarNav.style.display = 'none';
         if (dashboardContent) dashboardContent.style.display = 'none';
-    }
-
-    const sessionWarning = document.getElementById('session-warning');
-    const sessionWarningText = document.getElementById('session-warning-text');
-    const sessionTime = document.getElementById('session-time');
-    const renewBtn = document.getElementById('session-renew-btn');
-
-    const showWarning = (message) => {
-        if (!sessionWarning || !sessionWarningText) return;
-        sessionWarningText.textContent = message;
-        sessionWarning.style.display = 'flex';
-    };
-
-    const hideWarning = () => {
-        if (!sessionWarning) return;
-        sessionWarning.style.display = 'none';
-        if (sessionWarningText) sessionWarningText.textContent = '';
-    };
-
-    const formatTimer = (milissegundos) => {
-        const totalSeconds = Math.max(0, Math.ceil(milissegundos / 1000));
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    };
-
-    let sessionExpirationAt =
-        Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
-
-    const renovarSessao = async () => {
-        try {
-            const response = await fetch('/api/session', {
-                method: 'GET',
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                await encerrarSessao();
-                return;
-            }
-
-            const data = await response.json();
-            if (data.authenticated) {
-                sessionExpirationAt =
-                    Date.now() + (Number(data.expiresInMs) || 30 * 60 * 1000);
-                hideWarning();
-            }
-        } catch (error) {
-            console.error('Erro ao renovar a sessão:', error);
-        }
-    };
-
-    if (renewBtn) {
-        renewBtn.addEventListener('click', async () => {
-            await renovarSessao();
-        });
     }
 
     const encerrarSessao = async () => {
@@ -134,24 +81,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sessaoMonitor = async () => {
         const remainingMs = Math.max(0, sessionExpirationAt - Date.now());
 
-        if (sessionTime) {
-            sessionTime.textContent = formatTimer(remainingMs);
-        }
-
         if (remainingMs <= 0) {
             await encerrarSessao();
-            return;
-        }
-
-        if (remainingMs <= 10 * 60 * 1000) {
-            const segundos = Math.ceil(remainingMs / 1000);
-            const minutos = Math.floor(segundos / 60);
-            const sobra = segundos % 60;
-            showWarning(
-                `Sua sessão expirará em ${minutos}m ${sobra}s. Deseja continuar?`
-            );
-        } else {
-            hideWarning();
         }
     };
 

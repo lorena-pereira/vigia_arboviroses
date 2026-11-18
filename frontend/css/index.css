@@ -154,6 +154,13 @@ body {
     transform: rotate(180deg);
 }
 
+.nav-item-toggle .arrow-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+}
+
 .nav-submenu {
     display: none;
     flex-direction: column;

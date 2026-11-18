@@ -37,6 +37,13 @@
     transition: transform 0.3s ease;
 }
 
+.nav-item-toggle .arrow-icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+}
+
 .nav-item-group.active .arrow-icon {
     transform: rotate(180deg);
 }

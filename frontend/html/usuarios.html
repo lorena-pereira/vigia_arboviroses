@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Usuários | Vigia Arboviroses</title>
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/usuarios.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-icon"><i data-lucide="activity"></i></div>
+            <h2>Vigia<br>Arboviroses</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/index.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Painel Geral</span></a>
+            <div class="nav-item-group">
+                <button class="nav-item-toggle" type="button">
+                    <div class="toggle-left"><i data-lucide="users"></i><span>Pacientes</span></div>
+                    <i data-lucide="chevron-down" class="arrow-icon"></i>
+                </button>
+                <div class="nav-submenu">
+                    <a href="/cadastrar-paciente.html" class="submenu-item">Cadastrar Paciente</a>
+                </div>
+            </div>
+            <a href="#" class="nav-item"><i data-lucide="file-text"></i><span>Notificações</span></a>
+            <a href="/usuarios.html" class="nav-item active" data-admin-only><i data-lucide="users-round"></i><span>Usuários</span></a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="#" id="logout-btn" class="nav-item"><i data-lucide="log-out"></i><span>Encerrar sessão</span></a>
+        </div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <div class="page-title"><h1>Gestão de Usuários</h1><p>Município: Vitória da Conquista - BA</p></div>
+            <div class="user-profile">
+                <div class="avatar"><i data-lucide="user"></i></div>
+                <div class="user-info"><span id="user-name">Carregando...</span><small id="user-role">Administrador</small></div>
+            </div>
+        </header>
+        <div class="dashboard-content">
+            <div class="prototype-banner"><i data-lucide="shield-check"></i> Dados institucionais protegidos por perfil RBAC e registro de auditoria.</div>
+            <div class="page-heading">
+                <div><h1>Gestão de Usuários</h1><p>Cadastre operadores e gerencie perfis de acesso ao sistema.</p></div>
+                <a class="btn btn-primary" href="/cadastrar-usuario.html"><i data-lucide="user-plus"></i>Novo Usuário</a>
+            </div>
+            <section class="filters-card">
+                <div class="filters-grid">
+                    <div class="field"><label for="filter-search">Buscar usuário</label><input id="filter-search" type="search" placeholder="Nome, usuário ou e-mail"></div>
+                    <div class="field"><label for="filter-profile">Perfil</label><select id="filter-profile"><option value="">Todos os perfis</option><option value="ADMINISTRADOR">Administrador</option><option value="TECNICO">Agente de Vigilância Epidemiológica</option><option value="GESTOR">Munícipe</option><option value="ENDEMIAS">Agente de Combate de Endemias</option></select></div>
+                    <div class="field"><label for="filter-status">Situação</label><select id="filter-status"><option value="">Todas as situações</option><option value="ativo">Ativo</option><option value="pendente">Primeiro acesso pendente</option></select></div>
+                </div>
+            </section>
+            <section class="table-card">
+                <table class="users-table">
+                    <thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Situação</th><th class="table-actions">Ações</th></tr></thead>
+                    <tbody id="users-body"><tr><td colspan="5">Carregando usuários...</td></tr></tbody>
+                </table>
+            </section>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="../javascript/auth.js"></script>
+<script src="../javascript/usuarios.js"></script>
+<script src="../javascript/sidebar.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

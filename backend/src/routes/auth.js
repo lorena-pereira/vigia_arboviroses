@@ -27,6 +27,7 @@ router.post('/login', async (req, res) => {
             const session = {
                 usuario,
                 perfil: r.perfil,
+                exigeTrocaSenha: r.exigeTrocaSenha,
                 createdAt: Date.now(),
                 expiresAt: Date.now() + SESSION_TIMEOUT_MS,
             };
@@ -42,8 +43,11 @@ router.post('/login', async (req, res) => {
                 user: {
                     nome: usuario,
                     perfil: r.perfil,
+                    exigeTrocaSenha: Boolean(r.exigeTrocaSenha),
                 },
-                redirect: '/index.html',
+                redirect: r.exigeTrocaSenha
+                    ? '/html/troca-obrigatoria-senha.html'
+                    : '/index.html',
             });
         }
 

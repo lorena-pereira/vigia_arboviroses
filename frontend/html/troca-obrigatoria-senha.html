@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troca obrigatória de senha | Vigia Arboviroses</title>
+    <link rel="stylesheet" href="../css/usuarios.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="password-page">
+<main class="password-card">
+    <h1>Vigia Arboviroses</h1>
+    <p class="subtitle">Sistema Municipal de Vigilância Epidemiológica</p>
+    <div class="password-banner"><strong>Primeiro acesso detectado.</strong><br>Por motivos de segurança, altere sua senha provisória para continuar.</div>
+    <form id="pwd-form">
+        <div class="field"><label for="senha-atual">Senha provisória atual</label><input id="senha-atual" type="password" autocomplete="current-password" required></div>
+        <div class="field"><label for="nova-senha">Nova senha</label><input id="nova-senha" type="password" autocomplete="new-password" required></div>
+        <div class="field"><label for="confirmar-senha">Confirmar nova senha</label><input id="confirmar-senha" type="password" autocomplete="new-password" required></div>
+        <ul class="password-checks" id="password-checks">
+            <li data-rule="length">No mínimo 8 caracteres</li>
+            <li data-rule="upper">Ao menos uma letra maiúscula</li>
+            <li data-rule="lower">Ao menos uma letra minúscula</li>
+            <li data-rule="number">Ao menos um número</li>
+            <li data-rule="special">Ao menos um caractere especial</li>
+        </ul>
+        <button class="btn btn-primary" id="submit-btn" type="submit">Salvar nova senha</button>
+    </form>
+</main>
+<div class="toast" id="toast"></div>
+<script src="../javascript/auth.js"></script>
+<script src="../javascript/troca-senha.js"></script>
+</body>
+</html>

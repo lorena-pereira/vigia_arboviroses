@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Usuário | Vigia Arboviroses</title>
+    <link rel="stylesheet" href="../css/index.css"><link rel="stylesheet" href="../css/usuarios.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="brand-icon"><i data-lucide="activity"></i></div><h2>Vigia<br>Arboviroses</h2></div>
+        <nav class="sidebar-nav">
+            <a href="/index.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Painel Geral</span></a>
+            <div class="nav-item-group">
+                <button class="nav-item-toggle" type="button">
+                    <div class="toggle-left"><i data-lucide="users"></i><span>Pacientes</span></div>
+                    <i data-lucide="chevron-down" class="arrow-icon"></i>
+                </button>
+                <div class="nav-submenu">
+                    <a href="/cadastrar-paciente.html" class="submenu-item">Cadastrar Paciente</a>
+                </div>
+            </div>
+            <a href="#" class="nav-item"><i data-lucide="file-text"></i><span>Notificações</span></a>
+            <a href="/usuarios.html" class="nav-item active" data-admin-only><i data-lucide="users-round"></i><span>Usuários</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="#" id="logout-btn" class="nav-item"><i data-lucide="log-out"></i><span>Encerrar sessão</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar"><div class="page-title"><h1>Cadastrar Usuário</h1><p>Município: Vitória da Conquista - BA</p></div></header>
+        <div class="dashboard-content">
+            <a class="btn btn-secondary" href="/usuarios.html" style="margin-bottom:16px"><i data-lucide="arrow-left"></i>Voltar</a>
+            <form id="form-usuario">
+                <section class="form-card">
+                    <h2>Dados do operador</h2>
+                    <div class="form-layout">
+                        <div class="field"><label for="nome">Nome completo <span class="required">*</span></label><input id="nome" name="nome" required></div>
+                        <div class="field"><label for="usuario">Usuário <span class="required">*</span></label><input id="usuario" name="usuario" required></div>
+                        <div class="field"><label for="email">E-mail institucional <span class="required">*</span></label><input id="email" name="email" type="email" required></div>
+                        <div class="field"><label for="perfil">Perfil de acesso <span class="required">*</span></label><select id="perfil" name="perfil" required><option value="">Selecione...</option><option value="ADMINISTRADOR">Administrador</option><option value="TECNICO">Agente de Vigilância Epidemiológica</option><option value="GESTOR">Munícipe</option><option value="ENDEMIAS">Agente de Combate de Endemias</option></select></div>
+                        <div class="field full"><label for="senha">Senha provisória <span class="required">*</span></label><input id="senha" name="senha" type="password" minlength="8" required></div>
+                    </div>
+                </section>
+                <section class="form-card">
+                    <label class="field"><span><input id="exigeTroca" type="checkbox" checked> Exigir troca obrigatória no primeiro acesso</span></label>
+                    <div class="form-actions"><a class="btn btn-secondary" href="/usuarios.html">Cancelar</a><button class="btn btn-primary" type="submit"><i data-lucide="save"></i>Cadastrar usuário</button></div>
+                </section>
+            </form>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="../javascript/auth.js"></script>
+<script src="../javascript/cadastrar-usuario.js"></script>
+<script src="../javascript/sidebar.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,22 +1,38 @@
 [
     {
         "user": "admin",
-        "password": "admin123",
-        "profile": "admin"
+        "password": "Vigia@Ta3&",
+        "profile": "admin",
+        "nome": "Administrador Municipal",
+        "email": "admin@saude.vc.gov.br",
+        "ativo": true,
+        "exigeTrocaSenha": true
     },
     {
         "user": "111111",
         "password": "5678",
-        "profile": "municipio"
+        "profile": "municipio",
+        "nome": "Gestor Municipal",
+        "email": "gestor@saude.vc.gov.br",
+        "ativo": true,
+        "exigeTrocaSenha": false
     },
     {
         "user": "1202255",
         "password": "1234",
-        "profile": "agente_vigilancia_epidemiologica"
+        "profile": "agente_vigilancia_epidemiologica",
+        "nome": "Dra. Mariana Souza",
+        "email": "mariana.souza@saude.vc.gov.br",
+        "ativo": true,
+        "exigeTrocaSenha": false
     },
     {
         "user": "2202308",
         "password": "2202308",
-        "profile": "agente_combate_endemias"
+        "profile": "agente_combate_endemias",
+        "nome": "Carlos Eduardo Lima",
+        "email": "carlos.lima@saude.vc.gov.br",
+        "ativo": true,
+        "exigeTrocaSenha": true
     }
 ]

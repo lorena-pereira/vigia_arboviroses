@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'usuarioLogado',
                     JSON.stringify(usuarioLogado)
                 );
+                sessionStorage.removeItem('sessionExpirationAt');
 
                 // Redireciona substituindo a página no histórico
                 window.location.replace(data.redirect || '/index.html');

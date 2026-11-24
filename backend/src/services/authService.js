@@ -1,60 +1,87 @@
-import fs from 'fs';
+
+import bcrypt from 'bcryptjs';
+import { buscarUsuarioAtivo } from '../repositories/userRepository.js';
 
 export const MAX_TENTATIVAS = 5;
 export const MINUTOS_BLOQUEIO = 15;
 
-const usersFilePath = new URL('../../data/users.json', import.meta.url);
-
-// controle de tentativas em memoria: usuario -> { falhas, bloqueadoAte }
-// (zera se o servidor for reiniciado; na proxima sprint pode ir para o BD)
+// Controle de tentativas de login
 export const tentativas = new Map();
 
-function lerUsuarios() {
-    return JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
-}
+// Converte os perfis do banco para os nomes usados
+// atualmente pelo restante do sistema.
+const PERFIS = {
+    ADMINISTRADOR: 'admin',
+    TECNICO: 'agente_vigilancia_epidemiologica',
+    GESTOR: 'municipio',
+    ENDEMIAS: 'agente_combate_endemias',
+};
 
 /**
- * Resultado possivel:
- *  { ok: true, perfil }
- *  { ok: false, motivo: 'credenciais' }
- *  { ok: false, motivo: 'bloqueado', minutosRestantes }
+ * Autentica o usuário utilizando o MySQL e bcrypt.
+ *
+ * Resultado:
+ * { ok: true, perfil }
+ * { ok: false, motivo: 'credenciais' }
+ * { ok: false, motivo: 'bloqueado', minutosRestantes }
  */
-export function autenticar(usuario, senha) {
+export async function autenticar(usuario, senha) {
     const agora = Date.now();
-    const estado = tentativas.get(usuario) || { falhas: 0, bloqueadoAte: 0 };
 
-    // 1) esta bloqueado?
+    const estado = tentativas.get(usuario) || {
+        falhas: 0,
+        bloqueadoAte: 0,
+    };
+
+    // Verifica se o usuário está bloqueado
     if (estado.bloqueadoAte > agora) {
         return {
             ok: false,
             motivo: 'bloqueado',
-            minutosRestantes: Math.ceil((estado.bloqueadoAte - agora) / 60000),
+            minutosRestantes: Math.ceil(
+                (estado.bloqueadoAte - agora) / 60000
+            ),
         };
     }
 
-    // bloqueio anterior expirou: recomeca a contagem
+    // Reinicia a contagem quando o bloqueio expira
     if (estado.bloqueadoAte && estado.bloqueadoAte <= agora) {
         estado.falhas = 0;
         estado.bloqueadoAte = 0;
     }
 
-    // 2) confere usuario e senha
-    const user = lerUsuarios().find(
-        (u) => u.user === usuario && u.password === senha
-    );
+    // Consulta o usuário ativo no MySQL
+    const user = await buscarUsuarioAtivo(usuario);
 
-    if (user) {
-        tentativas.delete(usuario);
-        return { ok: true, perfil: user.profile };
+    // Compara a senha digitada com o hash armazenado
+    let senhaCorreta = false;
+
+    if (user && user.senha_hash) {
+        senhaCorreta = await bcrypt.compare(
+            senha,
+            user.senha_hash
+        );
     }
 
-    // 3) erro: conta a tentativa (vale tambem para usuario inexistente,
-    //    assim nao da para descobrir quais usuarios existem)
+    // Login válido
+    if (user && senhaCorreta) {
+        tentativas.delete(usuario);
+
+        return {
+            ok: true,
+            perfil: PERFIS[user.perfil] || user.perfil,
+        };
+    }
+
+    // Login inválido: conta a tentativa
     estado.falhas += 1;
 
     if (estado.falhas >= MAX_TENTATIVAS) {
-        estado.bloqueadoAte = agora + MINUTOS_BLOQUEIO * 60000;
+        estado.bloqueadoAte =
+            agora + MINUTOS_BLOQUEIO * 60000;
+
         tentativas.set(usuario, estado);
+
         return {
             ok: false,
             motivo: 'bloqueado',
@@ -63,5 +90,9 @@ export function autenticar(usuario, senha) {
     }
 
     tentativas.set(usuario, estado);
-    return { ok: false, motivo: 'credenciais' };
+
+    return {
+        ok: false,
+        motivo: 'credenciais',
+    };
 }

@@ -79,7 +79,6 @@ As rotas `/api/pacientes` exigem sessão autenticada com perfil `tecnico_vigilan
 - A aplicação não registra dados pessoais de pacientes em logs.
 - O acesso aos dados identificáveis de pacientes é restrito ao perfil técnico autorizado.
 
-
 ## Cadastro de pacientes (interface)
 
 A tela `frontend/html/cadastrar-paciente.html` foi integrada ao backend com persistência MySQL. O formulário encaminha ao endpoint `POST /api/pacientes` os campos atualmente cobertos pela migração inicial: nome, CPF, CNS, telefone e data de nascimento. Os demais campos visuais do formulário ainda não fazem parte da tabela `patients` e, portanto, não são persistidos nesta versão.

@@ -57,7 +57,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
 
     // Mantém o prazo absoluto da sessão ao navegar pelas páginas do sistema.
-    const storedExpirationAt = Number(sessionStorage.getItem('sessionExpirationAt') || 0);
+    const storedExpirationAt = Number(
+        sessionStorage.getItem('sessionExpirationAt') || 0
+    );
     if (storedExpirationAt > Date.now()) {
         sessionExpirationAt = Math.min(sessionExpirationAt, storedExpirationAt);
     }

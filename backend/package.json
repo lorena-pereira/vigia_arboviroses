@@ -1,17 +1,17 @@
 {
-  "type": "module",
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
-  "main": "server.js",
-  "scripts": {
-    "test": "node --test",
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.3.0"
-  }
+    "type": "module",
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "",
+    "license": "ISC",
+    "author": "",
+    "main": "server.js",
+    "scripts": {
+        "test": "node --test",
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^5.3.0"
+    }
 }

@@ -46,11 +46,11 @@ const login = async (perfil) => {
 const get = (p, cookie) =>
     fetch(base + p, { headers: cookie ? { Cookie: cookie } : {} });
 
-// Status esperado: 403 = barrado pelo perfil; 404 = passou pelo perfil
-// (a rota em si ainda será criada nas tasks 8.3 e 9.2).
+// Status esperado: 403 = barrado pelo perfil; 404 = rota ainda não existe;
+// 200 = rota implementada e disponível para o Administrador.
 const MATRIZ = {
     '/api/usuarios': {
-        ADMINISTRADOR: 404,
+        ADMINISTRADOR: 200,
         TECNICO: 403,
         GESTOR: 403,
         ENDEMIAS: 403,

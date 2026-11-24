@@ -27,6 +27,7 @@ router.post('/login', async (req, res) => {
             const session = {
                 usuario,
                 perfil: r.perfil,
+                exigeTrocaSenha: r.exigeTrocaSenha,
                 createdAt: Date.now(),
                 expiresAt: Date.now() + SESSION_TIMEOUT_MS,
             };
@@ -42,16 +43,20 @@ router.post('/login', async (req, res) => {
                 user: {
                     nome: usuario,
                     perfil: r.perfil,
+                    exigeTrocaSenha: Boolean(r.exigeTrocaSenha),
                 },
-                redirect: '/index.html',
+                redirect: r.exigeTrocaSenha
+                    ? '/html/troca-obrigatoria-senha.html'
+                    : '/index.html',
             });
         }
 
         if (r.motivo === 'bloqueado') {
+            const minutos = r.minutosRestantes;
             return res.status(429).json({
                 success: false,
                 bloqueado: true,
-                message: `Muitas tentativas incorretas. Tente novamente em ${r.minutosRestantes} minuto(s).`,
+                message: `Muitas tentativas. Tente novamente em ${minutos} minuto${minutos === 1 ? '' : 's'}.`,
             });
         }
 
@@ -61,9 +66,10 @@ router.post('/login', async (req, res) => {
             .json({ success: false, message: 'Usuário ou senha inválidos.' });
     } catch (error) {
         console.error('Erro interno no login:', error);
-        return res
-            .status(500)
-            .json({ success: false, message: 'Erro no servidor.' });
+        return res.status(500).json({
+            success: false,
+            message: 'Erro interno no servidor.',
+        });
     }
 });
 

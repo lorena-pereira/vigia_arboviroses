@@ -45,7 +45,11 @@ export function autenticar(usuario, senha) {
 
     if (user) {
         tentativas.delete(usuario);
-        return { ok: true, perfil: user.profile };
+        return {
+            ok: true,
+            perfil: user.profile,
+            exigeTrocaSenha: Boolean(user.exigeTrocaSenha),
+        };
     }
 
     // 3) erro: conta a tentativa (vale tambem para usuario inexistente,

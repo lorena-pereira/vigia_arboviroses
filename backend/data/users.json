@@ -1,12 +1,12 @@
 [
     {
         "user": "admin",
-        "password": "Vigia@Ta3&",
-        "profile": "admin",
+        "password": "Vigia@Gi7@",
+        "profile": "ADMINISTRADOR",
         "nome": "Administrador Municipal",
         "email": "admin@saude.vc.gov.br",
         "ativo": true,
-        "exigeTrocaSenha": true
+        "exigeTrocaSenha": false
     },
     {
         "user": "111111",

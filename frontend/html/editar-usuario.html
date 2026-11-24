@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,7 +40,7 @@
                         <div class="field"><label for="edit-usuario">Usuário / matrícula</label><input id="edit-usuario" disabled></div>
                         <div class="field"><label for="edit-email">E-mail institucional <span class="required">*</span></label><input id="edit-email" name="email" type="email" required></div>
                         <div class="field"><label for="edit-perfil">Perfil de acesso <span class="required">*</span></label><select id="edit-perfil" name="perfil" required><option value="ADMINISTRADOR">Administrador</option><option value="TECNICO">Agente de Vigilância Epidemiológica</option><option value="GESTOR">Munícipe</option><option value="ENDEMIAS">Agente de Combate de Endemias</option></select></div>
-                        <div class="field full"><label><input id="edit-ativo" type="checkbox" name="ativo"> Conta ativa</label></div>
+                        <div class="full"><label class="checkbox-label" for="edit-ativo"><input id="edit-ativo" type="checkbox" name="ativo"><span>Conta ativa</span></label></div>
                     </div>
                 </section>
                 <section class="form-card" id="security-section">
@@ -48,8 +48,8 @@
                     <div class="security-grid">
                         <div class="security-box">
                             <h3>Status da conta</h3>
-                            <p><span class="account-status" id="account-status">Ativo</span></p>
-                            <label class="field"><span><input id="force-reset" type="checkbox"> Forçar troca obrigatória no próximo acesso</span></label>
+                            <div class="status-row"><span class="account-status" id="account-status">Ativo</span></div>
+                            <label class="checkbox-label" for="force-reset"><input id="force-reset" type="checkbox"><span>Forçar troca obrigatória no próximo acesso</span></label>
                         </div>
                         <div class="security-box">
                             <h3>Redefinição de senha</h3>

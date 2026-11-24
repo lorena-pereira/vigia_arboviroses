@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await window.inicializarAutenticacao();
     if (!sessao) return;
 
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${user.email || '-'}</td>
                     <td><span class="role-badge">${profileLabel[user.perfil] || user.perfil}</span></td>
                     <td><span class="status-badge ${user.exigeTrocaSenha ? 'status-pending' : 'status-active'}">${user.exigeTrocaSenha ? 'Primeiro acesso pendente' : 'Ativo'}</span></td>
-                    <td><div class="table-actions"><button class="icon-btn" data-edit-user="${encodeURIComponent(user.usuario)}" title="Editar usuário" aria-label="Editar usuário"><i data-lucide="pencil"></i></button><button class="icon-btn" data-reset-user="${encodeURIComponent(user.usuario)}" title="Redefinir senha" aria-label="Redefinir senha"><i data-lucide="key-round"></i></button></div></td>
+                    <td><div class="table-actions"><button class="icon-btn" data-edit-user="${encodeURIComponent(user.usuario)}" title="Editar usuário" aria-label="Editar usuário"><i data-lucide="pencil"></i></button></div></td>
                 </tr>`).join('')
             : '<tr><td colspan="5">Nenhum usuário encontrado.</td></tr>';
         lucide.createIcons();
@@ -76,12 +76,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             button.addEventListener('click', () => {
                 window.location.href =
                     `/editar-usuario.html?usuario=${button.dataset.editUser}&modo=editar`;
-            });
-        });
-        body.querySelectorAll('[data-reset-user]').forEach((button) => {
-            button.addEventListener('click', () => {
-                window.location.href =
-                    `/editar-usuario.html?usuario=${button.dataset.resetUser}&modo=senha`;
             });
         });
     }

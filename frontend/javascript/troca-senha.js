@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await window.inicializarAutenticacao();
     if (!sessao) return;
 
@@ -8,6 +8,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const atual = document.getElementById('senha-atual');
     const toast = document.getElementById('toast');
     const checks = document.querySelectorAll('#password-checks li');
+    const toggles = document.querySelectorAll('.toggle-password');
+
+    function showToast(message, type = 'error') {
+        toast.textContent = message;
+        toast.style.display = 'block';
+        toast.classList.toggle('toast-error', type === 'error');
+        toast.classList.toggle('toast-success', type === 'success');
+    }
 
     function validatePassword() {
         const value = nova.value;
@@ -22,18 +30,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         return Object.values(rules).every(Boolean);
     }
 
+    toggles.forEach((button) => {
+        button.addEventListener('click', () => {
+            const targetId = button.dataset.target;
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            button.setAttribute('aria-label', showing ? 'Mostrar senha' : 'Ocultar senha');
+            button.innerHTML = `<i data-lucide="${showing ? 'eye-off' : 'eye'}"></i>`;
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        });
+    });
+
+    validatePassword();
     nova.addEventListener('input', validatePassword);
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!validatePassword()) {
-            toast.textContent = 'A nova senha não atende a todos os critérios.';
-            toast.style.display = 'block';
+            showToast('A nova senha ainda não atende a todos os requisitos. Verifique os itens em vermelho.', 'error');
+            nova.focus();
             return;
         }
         if (nova.value !== confirmar.value) {
-            toast.textContent = 'As senhas informadas não coincidem.';
-            toast.style.display = 'block';
+            showToast('As senhas informadas não coincidem.', 'error');
+            confirmar.focus();
             return;
         }
 
@@ -50,12 +75,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Erro ao redefinir senha.');
 
-            toast.textContent = 'Senha redefinida com sucesso.';
-            toast.style.display = 'block';
+            showToast('Senha redefinida com sucesso.', 'success');
             setTimeout(() => window.location.replace('/index.html'), 900);
         } catch (error) {
-            toast.textContent = error.message;
-            toast.style.display = 'block';
+            showToast(error.message, 'error');
         }
     });
 });

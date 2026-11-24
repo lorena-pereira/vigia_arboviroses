@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await window.inicializarAutenticacao();
     if (!sessao) return;
     if (sessao.perfil !== 'admin' && sessao.perfil !== 'ADMINISTRADOR') {
@@ -16,7 +16,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const form = document.getElementById('edit-user-form');
     const toast = document.getElementById('toast');
+    const nomeInput = document.getElementById('edit-nome');
+    const emailInput = document.getElementById('edit-email');
+    const perfilInput = document.getElementById('edit-perfil');
+    const ativoInput = document.getElementById('edit-ativo');
+    const forceResetInput = document.getElementById('force-reset');
     let currentUser = null;
+    let savedSnapshot = null;
 
     function showToast(message, success = true) {
         toast.textContent = message;
@@ -31,26 +37,53 @@ document.addEventListener('DOMContentLoaded', async () => {
             .map((part) => part[0]).join('').toUpperCase();
     }
 
+    function getSnapshot() {
+        return {
+            nome: nomeInput.value,
+            email: emailInput.value,
+            perfil: perfilInput.value,
+            ativo: ativoInput.checked,
+            exigeTrocaSenha: forceResetInput.checked,
+        };
+    }
+
+    function isDirty() {
+        if (!savedSnapshot) return false;
+        const current = getSnapshot();
+        return Object.keys(savedSnapshot).some((key) => savedSnapshot[key] !== current[key]);
+    }
+
+    document.querySelector('.sidebar')?.addEventListener('click', (event) => {
+        const link = event.target.closest('a');
+        if (!link) return;
+        if (isDirty()) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            alert('Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.');
+        }
+    }, true);
+
     try {
         const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { credentials: 'same-origin' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         currentUser = data.user;
 
-        document.getElementById('edit-nome').value = currentUser.nome;
+        nomeInput.value = currentUser.nome;
         document.getElementById('edit-usuario').value = currentUser.usuario;
-        document.getElementById('edit-email').value = currentUser.email;
-        document.getElementById('edit-perfil').value =
+        emailInput.value = currentUser.email;
+        perfilInput.value =
             ({ admin: 'ADMINISTRADOR', municipio: 'GESTOR',
                agente_vigilancia_epidemiologica: 'TECNICO',
                agente_combate_endemias: 'ENDEMIAS' }[currentUser.perfil] || currentUser.perfil);
-        document.getElementById('edit-ativo').checked = currentUser.ativo;
-        document.getElementById('force-reset').checked = currentUser.exigeTrocaSenha;
+        ativoInput.checked = currentUser.ativo;
+        forceResetInput.checked = currentUser.exigeTrocaSenha;
         document.getElementById('edit-avatar').textContent = initials(currentUser.nome);
         document.getElementById('edit-name').textContent = currentUser.nome;
         document.getElementById('edit-login').textContent = currentUser.email;
 
         updateStatus();
+        savedSnapshot = getSnapshot();
         if (modo === 'senha') {
             setTimeout(() => document.getElementById('security-section').scrollIntoView({ behavior: 'smooth' }), 150);
         }
@@ -60,8 +93,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateStatus() {
         const status = document.getElementById('account-status');
-        const active = document.getElementById('edit-ativo').checked;
-        const pending = document.getElementById('force-reset').checked;
+        const active = ativoInput.checked;
+        const pending = forceResetInput.checked;
         status.className = 'account-status';
         if (!active) {
             status.textContent = 'Inativo';
@@ -76,12 +109,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             active ? 'Desativar operador' : 'Ativar operador';
     }
 
-    document.getElementById('edit-ativo').addEventListener('change', updateStatus);
-    document.getElementById('force-reset').addEventListener('change', updateStatus);
+    ativoInput.addEventListener('change', updateStatus);
+    forceResetInput.addEventListener('change', updateStatus);
 
     document.getElementById('deactivate-user').addEventListener('click', () => {
-        document.getElementById('edit-ativo').checked =
-            !document.getElementById('edit-ativo').checked;
+        ativoInput.checked = !ativoInput.checked;
         updateStatus();
     });
 
@@ -104,8 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
-            document.getElementById('force-reset').checked = true;
+            forceResetInput.checked = true;
             updateStatus();
+            if (savedSnapshot) savedSnapshot.exigeTrocaSenha = true;
             showToast(`Senha provisória: ${temporaryPassword}`);
         } catch (error) {
             showToast(error.message, false);
@@ -115,11 +148,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const payload = {
-            nome: document.getElementById('edit-nome').value.trim(),
-            email: document.getElementById('edit-email').value.trim(),
-            perfil: document.getElementById('edit-perfil').value,
-            ativo: document.getElementById('edit-ativo').checked,
-            exigeTrocaSenha: document.getElementById('force-reset').checked,
+            nome: nomeInput.value.trim(),
+            email: emailInput.value.trim(),
+            perfil: perfilInput.value,
+            ativo: ativoInput.checked,
+            exigeTrocaSenha: forceResetInput.checked,
         };
         try {
             const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, {
@@ -128,6 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
+            savedSnapshot = getSnapshot();
             showToast(data.message);
             setTimeout(() => window.location.replace('/usuarios.html'), 900);
         } catch (error) {

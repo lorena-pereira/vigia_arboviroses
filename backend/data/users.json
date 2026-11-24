@@ -2,7 +2,7 @@
     {
         "user": "admin",
         "password": "admin123",
-        "profile": "ADMINISTRADOR",
+        "profile": "admin",
         "nome": "Administrador Municipal",
         "email": "admin@saude.vc.gov.br",
         "ativo": true,

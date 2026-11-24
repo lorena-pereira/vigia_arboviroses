@@ -52,10 +52,11 @@ router.post('/login', async (req, res) => {
         }
 
         if (r.motivo === 'bloqueado') {
+            const minutos = r.minutosRestantes;
             return res.status(429).json({
                 success: false,
                 bloqueado: true,
-                message: `Muitas tentativas incorretas. Tente novamente em ${r.minutosRestantes} minuto(s).`,
+                message: `Muitas tentativas. Tente novamente em ${minutos} minuto${minutos === 1 ? '' : 's'}.`,
             });
         }
 
@@ -65,9 +66,10 @@ router.post('/login', async (req, res) => {
             .json({ success: false, message: 'Usuário ou senha inválidos.' });
     } catch (error) {
         console.error('Erro interno no login:', error);
-        return res
-            .status(500)
-            .json({ success: false, message: 'Erro no servidor.' });
+        return res.status(500).json({
+            success: false,
+            message: 'Erro interno no servidor.',
+        });
     }
 });
 

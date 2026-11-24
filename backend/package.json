@@ -8,7 +8,7 @@
     "author": "",
     "main": "server.js",
     "scripts": {
-        "test": "node --test test/login.test.js && node --test test/perfil.test.js && node --test test/protecao-rotas.test.js",
+        "test": "node --test \"test/*.test.js\"",
         "start": "node server.js",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",

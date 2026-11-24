@@ -1,13 +1,27 @@
+
+import js from '@eslint/js';
+import globals from 'globals';
 import ljharbConfig from '@ljharb/eslint-config/flat';
+import prettierConfig from 'eslint-config-prettier';
 
 export default [
     {
-        ignores: ['dist/'],
+        ignores: ['node_modules/**', 'dist/**'],
     },
+
+    js.configs.recommended,
 
     ...ljharbConfig,
 
     {
+        languageOptions: {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+            globals: {
+                ...globals.node,
+                ...globals.jest,
+            },
+        },
         rules: {
             complexity: 'off',
             'consistent-return': 'warn',
@@ -37,6 +51,9 @@ export default [
                 'LabeledStatement',
                 'WithStatement',
             ],
+            'linebreak-style': 'off',
+            'no-unused-vars': 'warn',
+            'no-console': 'off',
         },
     },
 
@@ -51,4 +68,7 @@ export default [
             'no-throw-literal': 'off',
         },
     },
+
+    // Prettier prevalece sobre regras de formatação conflitantes do ESLint.
+    prettierConfig,
 ];

@@ -193,122 +193,122 @@ CREATE TABLE Telefone (
     fk_Paciente_id INT UNSIGNED NOT NULL,
     PRIMARY KEY (fk_Paciente_id, telefone)
 );
- 
+
 ALTER TABLE Paciente ADD CONSTRAINT FK_Paciente_2
     FOREIGN KEY (fk_Endereco_id)
     REFERENCES Endereco (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Unidade ADD CONSTRAINT FK_Unidade_2
     FOREIGN KEY (fk_Endereco_id)
     REFERENCES Endereco (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_2
     FOREIGN KEY (fk_Unidade_Notificacao_id)
     REFERENCES Unidade (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_3
     FOREIGN KEY (fk_Paciente_id)
     REFERENCES Paciente (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_4
     FOREIGN KEY (fk_Doenca_id)
     REFERENCES Doenca (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_5
     FOREIGN KEY (fk_Endereco_id)
     REFERENCES Endereco (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_6
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_7
     FOREIGN KEY (fk_Importacao_id)
     REFERENCES Importacao (id)
     ON DELETE SET NULL;
- 
+
 ALTER TABLE Notificacao ADD CONSTRAINT FK_Notificacao_8
     FOREIGN KEY (fk_Unidade_Acompanhamento_id)
     REFERENCES Unidade (id)
     ON DELETE SET NULL;
- 
+
 ALTER TABLE Monitoramento ADD CONSTRAINT FK_Monitoramento_2
     FOREIGN KEY (fk_Notificacao_id)
     REFERENCES Notificacao (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Monitoramento ADD CONSTRAINT FK_Monitoramento_3
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Exame ADD CONSTRAINT FK_Exame_2
     FOREIGN KEY (fk_Notificacao_id)
     REFERENCES Notificacao (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Exame ADD CONSTRAINT FK_Exame_3
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Hospitalizacao ADD CONSTRAINT FK_Hospitalizacao_2
     FOREIGN KEY (fk_Notificacao_id)
     REFERENCES Notificacao (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Hospitalizacao ADD CONSTRAINT FK_Hospitalizacao_3
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Endereco ADD CONSTRAINT FK_Endereco_2
     FOREIGN KEY (fk_Bairro_id)
     REFERENCES Bairro (id)
     ON DELETE SET NULL;
- 
+
 ALTER TABLE HistoricoAlteracao ADD CONSTRAINT FK_HistoricoAlteracao_2
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Denuncia ADD CONSTRAINT FK_Denuncia_2
     FOREIGN KEY (fk_Endereco_id)
     REFERENCES Endereco (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE PopulacaoBairro ADD CONSTRAINT FK_PopulacaoBairro_2
     FOREIGN KEY (fk_Bairro_id)
     REFERENCES Bairro (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE Importacao ADD CONSTRAINT FK_Importacao_2
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE RESTRICT;
- 
+
 ALTER TABLE AcaoCampo ADD CONSTRAINT FK_AcaoCampo_2
     FOREIGN KEY (fk_Notificacao_id)
     REFERENCES Notificacao (id)
     ON DELETE SET NULL;
- 
+
 ALTER TABLE AcaoCampo ADD CONSTRAINT FK_AcaoCampo_3
     FOREIGN KEY (fk_Denuncia_id)
     REFERENCES Denuncia (id)
     ON DELETE SET NULL;
- 
+
 ALTER TABLE AcaoCampo ADD CONSTRAINT FK_AcaoCampo_4
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)
     ON DELETE SET NULL;
- 
+
 ALTER TABLE Sessao ADD CONSTRAINT FK_Sessao_Usuario
     FOREIGN KEY (fk_Usuario_id)
     REFERENCES Usuario (id)

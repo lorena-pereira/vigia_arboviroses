@@ -479,25 +479,3 @@ Isso pode ser normal na subtask 6.3.2. O banco pode estar **vazio** até a cria�
 ### Erro G — Mudou `.env`, mas o MySQL continua aceitando a senha anterior
 
 Com um volume já inicializado, o MySQL **não reconfigura usuários e senhas** apenas porque o `.env` foi alterado. Use o procedimento seguro do **Erro D** e preserve os dados. Não rode `docker compose down -v` para “corrigir” senha em banco com informações importantes.
-
-## 11. Evidências para encerrar a subtask no Trello
-
-Confira estes cinco itens da checklist original:
-
-- [ ] Criar Dockerfile para aplicação Node.js com recarga local.
-- [ ] Criar `docker-compose.yml` com `app`, MySQL 8.4 e Adminer.
-- [ ] Configurar volume persistente do banco e comunicação entre serviços.
-- [ ] Criar `.env.example` sem credenciais reais.
-- [ ] Subir os serviços e verificar a conexão inicial.
-
-**Evidências recomendadas:** captura de `docker compose ps` com `db` em **Healthy** e os outros serviços em execução; consulta `SELECT 1 AS conexao_ok`; login no Adminer; registro `Docker funcionando` após `down`/`up`; e logs de reinicialização do nodemon após salvar um arquivo JS. Evite imagens contendo senhas, dados pessoais ou o arquivo `.env`.
-
-Após os testes e a revisão previstos no fluxo da equipe, o cartão poderá ser movido para **Feito**.
-
-## 12. Limites da subtask e próximas dependências
-
-- Este guia cobre **infraestrutura local**, não login definitivo, integração do backend com MySQL, autenticação por perfil ou implantação em produção.
-- O cadastro de pacientes do backend recebido anteriormente ainda gravava dados em JSON; o Compose **não migra automaticamente** essas informações para o MySQL.
-- A **subtask 6.6.1** fará a conexão do backend com `mysql2/promise` usando `DB_HOST=db`, `DB_PORT=3306` e as outras variáveis.
-- A **subtask 6.2.3** criará `db/001_schema.sql`; a **6.3.4** fará a carga automática pelo diretório `/docker-entrypoint-initdb.d`. Esses scripts de inicialização são executados automaticamente **somente quando o volume de dados está vazio**, não a cada reinício.
-- Em produção será necessário configurar HTTPS, sessões persistentes, políticas de acesso, gestão de segredos e backup/restauração testados.

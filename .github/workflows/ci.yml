@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -21,9 +22,14 @@ jobs:
                       package-lock.json
                       backend/package-lock.json
 
-            # Instalar ferramentas da raiz
+            # Instalar dependencias da raiz
             - name: Instalar dependencias da raiz
               run: npm ci
+
+            # Instalar dependencias do backend antes do ESLint
+            - name: Instalar dependencias do backend
+              run: npm ci
+              working-directory: backend
 
             # Verificar qualidade do codigo
             - name: Verificar ESLint
@@ -32,11 +38,6 @@ jobs:
             # Verificar formatacao
             - name: Verificar Prettier
               run: npm run format:check
-
-            # Instalar dependencias do backend
-            - name: Instalar dependencias do backend
-              run: npm ci
-              working-directory: backend
 
             # Executar testes automatizados
             - name: Executar testes do backend

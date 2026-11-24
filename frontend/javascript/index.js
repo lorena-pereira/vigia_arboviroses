@@ -53,68 +53,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     atualizarUsuarioTopo(sessaoValida);
 
+    let sessionExpirationAt =
+        Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
+
+    // Mantém o prazo absoluto da sessão ao navegar pelas páginas do sistema.
+    const storedExpirationAt = Number(
+        sessionStorage.getItem('sessionExpirationAt') || 0
+    );
+    if (storedExpirationAt > Date.now()) {
+        sessionExpirationAt = Math.min(sessionExpirationAt, storedExpirationAt);
+    }
+    sessionStorage.setItem('sessionExpirationAt', String(sessionExpirationAt));
+
+    const userProfile = document.querySelector('.user-profile');
+    let sessionTimer = document.getElementById('session-timer');
+
+    if (!sessionTimer && userProfile) {
+        sessionTimer = document.createElement('div');
+        sessionTimer.id = 'session-timer';
+        sessionTimer.setAttribute('aria-live', 'polite');
+        sessionTimer.title = 'Tempo restante da sessão';
+        sessionTimer.style.cssText =
+            'min-width: 108px; margin-left: 8px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #475569; font-size: 12px; font-weight: 700; text-align: center;';
+        userProfile.appendChild(sessionTimer);
+    }
+
     if (sessaoValida.perfil === 'municipio') {
         const sidebarNav = document.querySelector('.sidebar-nav');
         const dashboardContent = document.querySelector('.dashboard-content');
 
         if (sidebarNav) sidebarNav.style.display = 'none';
         if (dashboardContent) dashboardContent.style.display = 'none';
-    }
-
-    const sessionWarning = document.getElementById('session-warning');
-    const sessionWarningText = document.getElementById('session-warning-text');
-    const sessionTime = document.getElementById('session-time');
-    const renewBtn = document.getElementById('session-renew-btn');
-
-    const showWarning = (message) => {
-        if (!sessionWarning || !sessionWarningText) return;
-        sessionWarningText.textContent = message;
-        sessionWarning.style.display = 'flex';
-    };
-
-    const hideWarning = () => {
-        if (!sessionWarning) return;
-        sessionWarning.style.display = 'none';
-        if (sessionWarningText) sessionWarningText.textContent = '';
-    };
-
-    const formatTimer = (milissegundos) => {
-        const totalSeconds = Math.max(0, Math.ceil(milissegundos / 1000));
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    };
-
-    let sessionExpirationAt =
-        Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
-
-    const renovarSessao = async () => {
-        try {
-            const response = await fetch('/api/session', {
-                method: 'GET',
-                credentials: 'same-origin',
-            });
-
-            if (!response.ok) {
-                await encerrarSessao();
-                return;
-            }
-
-            const data = await response.json();
-            if (data.authenticated) {
-                sessionExpirationAt =
-                    Date.now() + (Number(data.expiresInMs) || 30 * 60 * 1000);
-                hideWarning();
-            }
-        } catch (error) {
-            console.error('Erro ao renovar a sessão:', error);
-        }
-    };
-
-    if (renewBtn) {
-        renewBtn.addEventListener('click', async () => {
-            await renovarSessao();
-        });
     }
 
     const encerrarSessao = async () => {
@@ -127,35 +96,78 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Erro ao encerrar sessão:', error);
         }
 
+        sessionStorage.removeItem('sessionExpirationAt');
         localStorage.removeItem('usuarioLogado');
         window.location.replace('../html/login.html');
     };
 
-    const sessaoMonitor = async () => {
-        const remainingMs = Math.max(0, sessionExpirationAt - Date.now());
+    let alertaSessaoExibido = false;
 
-        if (sessionTime) {
-            sessionTime.textContent = formatTimer(remainingMs);
-        }
+    const exibirAvisoSessao = async () => {
+        if (alertaSessaoExibido) return;
+        alertaSessaoExibido = true;
 
-        if (remainingMs <= 0) {
-            await encerrarSessao();
-            return;
-        }
+        const renovar = window.confirm(
+            'Sua sessão está próxima do fim. Deseja renovar a sessão agora?'
+        );
 
-        if (remainingMs <= 10 * 60 * 1000) {
-            const segundos = Math.ceil(remainingMs / 1000);
-            const minutos = Math.floor(segundos / 60);
-            const sobra = segundos % 60;
-            showWarning(
-                `Sua sessão expirará em ${minutos}m ${sobra}s. Deseja continuar?`
+        if (!renovar) return;
+
+        try {
+            const response = await fetch('/api/session/renew', {
+                method: 'POST',
+                credentials: 'same-origin',
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.authenticated) {
+                await encerrarSessao();
+                return;
+            }
+
+            sessionExpirationAt = Date.now() + Number(data.expiresInMs);
+            sessionStorage.setItem(
+                'sessionExpirationAt',
+                String(sessionExpirationAt)
             );
-        } else {
-            hideWarning();
+            alertaSessaoExibido = false;
+            window.alert('Sessão renovada com sucesso!');
+        } catch (error) {
+            console.error('Erro ao renovar sessão:', error);
+            window.alert('Não foi possível renovar a sessão.');
         }
     };
 
-    setInterval(sessaoMonitor, 1000);
+    const atualizarTimerSessao = () => {
+        const remainingMs = Math.max(0, sessionExpirationAt - Date.now());
+        const totalSeconds = Math.ceil(remainingMs / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        if (sessionTimer) {
+            sessionTimer.textContent = `Sessão: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            if (remainingMs <= 5 * 60 * 1000) {
+                void exibirAvisoSessao();
+                sessionTimer.style.color = '#b91c1c';
+                sessionTimer.style.borderColor = '#fecaca';
+                sessionTimer.style.background = '#fef2f2';
+            } else {
+                sessionTimer.style.color = '#475569';
+                sessionTimer.style.borderColor = '#e2e8f0';
+                sessionTimer.style.background = '#f8fafc';
+            }
+        }
+
+        if (remainingMs <= 0) {
+            if (timerInterval) clearInterval(timerInterval);
+            void encerrarSessao();
+        }
+    };
+
+    let timerInterval = null;
+    atualizarTimerSessao();
+    timerInterval = setInterval(atualizarTimerSessao, 1000);
 
     const logoutBtn = document.getElementById('logout-btn');
 

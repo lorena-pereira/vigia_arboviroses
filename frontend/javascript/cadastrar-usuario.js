@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify(data),
             });
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Erro ao cadastrar usuário.');
+            if (!response.ok)
+                throw new Error(result.message || 'Erro ao cadastrar usuário.');
 
             toast.textContent = 'Usuário cadastrado com sucesso.';
             toast.style.display = 'block';

@@ -99,28 +99,34 @@ router.put('/:usuario', requireRole(PERFIS.ADMINISTRADOR), (req, res) => {
         user.exigeTrocaSenha = body.exigeTrocaSenha;
     }
     writeUsers(users);
-    return res.status(200).json({ success: true, message: 'Usuário atualizado.' });
+    return res
+        .status(200)
+        .json({ success: true, message: 'Usuário atualizado.' });
 });
 
-router.post('/:usuario/redefinir-senha', requireRole(PERFIS.ADMINISTRADOR), (req, res) => {
-    const usuario = String(req.params.usuario || '');
-    const users = readUsers();
-    const user = users.find((item) => item.user === usuario);
-    if (!user) {
-        return res.status(404).json({
-            success: false,
-            message: 'Usuário não encontrado.',
+router.post(
+    '/:usuario/redefinir-senha',
+    requireRole(PERFIS.ADMINISTRADOR),
+    (req, res) => {
+        const usuario = String(req.params.usuario || '');
+        const users = readUsers();
+        const user = users.find((item) => item.user === usuario);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado.',
+            });
+        }
+
+        const senha = String(req.body?.senha || '');
+        if (senha) user.password = senha;
+        user.exigeTrocaSenha = true;
+        writeUsers(users);
+        return res.status(200).json({
+            success: true,
+            message: 'Redefinição de senha configurada.',
         });
     }
-
-    const senha = String(req.body?.senha || '');
-    if (senha) user.password = senha;
-    user.exigeTrocaSenha = true;
-    writeUsers(users);
-    return res.status(200).json({
-        success: true,
-        message: 'Redefinição de senha configurada.',
-    });
-});
+);
 
 export default router;

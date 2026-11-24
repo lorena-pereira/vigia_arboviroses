@@ -26,7 +26,9 @@
             number: /\d/.test(value),
             special: /[^A-Za-z0-9]/.test(value),
         };
-        checks.forEach((item) => item.classList.toggle('valid', Boolean(rules[item.dataset.rule])));
+        checks.forEach((item) =>
+            item.classList.toggle('valid', Boolean(rules[item.dataset.rule]))
+        );
         return Object.values(rules).every(Boolean);
     }
 
@@ -38,9 +40,15 @@
 
             const showing = input.type === 'text';
             input.type = showing ? 'password' : 'text';
-            button.setAttribute('aria-label', showing ? 'Mostrar senha' : 'Ocultar senha');
+            button.setAttribute(
+                'aria-label',
+                showing ? 'Mostrar senha' : 'Ocultar senha'
+            );
             button.innerHTML = `<i data-lucide="${showing ? 'eye-off' : 'eye'}"></i>`;
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            if (
+                window.lucide &&
+                typeof window.lucide.createIcons === 'function'
+            ) {
                 window.lucide.createIcons();
             }
         });
@@ -52,7 +60,10 @@
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!validatePassword()) {
-            showToast('A nova senha ainda não atende a todos os requisitos. Verifique os itens em vermelho.', 'error');
+            showToast(
+                'A nova senha ainda não atende a todos os requisitos. Verifique os itens em vermelho.',
+                'error'
+            );
             nova.focus();
             return;
         }
@@ -73,7 +84,8 @@
                 }),
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Erro ao redefinir senha.');
+            if (!response.ok)
+                throw new Error(data.message || 'Erro ao redefinir senha.');
 
             showToast('Senha redefinida com sucesso.', 'success');
             setTimeout(() => window.location.replace('/index.html'), 900);

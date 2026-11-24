@@ -32,8 +32,13 @@
     }
 
     function initials(name) {
-        return String(name).split(/\s+/).filter(Boolean).slice(0, 2)
-            .map((part) => part[0]).join('').toUpperCase();
+        return String(name)
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join('')
+            .toUpperCase();
     }
 
     function getSnapshot() {
@@ -49,21 +54,32 @@
     function isDirty() {
         if (!savedSnapshot) return false;
         const current = getSnapshot();
-        return Object.keys(savedSnapshot).some((key) => savedSnapshot[key] !== current[key]);
+        return Object.keys(savedSnapshot).some(
+            (key) => savedSnapshot[key] !== current[key]
+        );
     }
 
-    document.querySelector('.sidebar')?.addEventListener('click', (event) => {
-        const link = event.target.closest('a');
-        if (!link) return;
-        if (isDirty()) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            alert('Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.');
-        }
-    }, true);
+    document.querySelector('.sidebar')?.addEventListener(
+        'click',
+        (event) => {
+            const link = event.target.closest('a');
+            if (!link) return;
+            if (isDirty()) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                alert(
+                    'Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.'
+                );
+            }
+        },
+        true
+    );
 
     try {
-        const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { credentials: 'same-origin' });
+        const response = await fetch(
+            `/api/usuarios/${encodeURIComponent(usuario)}`,
+            { credentials: 'same-origin' }
+        );
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         const currentUser = data.user;
@@ -72,19 +88,30 @@
         document.getElementById('edit-usuario').value = currentUser.usuario;
         emailInput.value = currentUser.email;
         perfilInput.value =
-            ({ admin: 'ADMINISTRADOR', municipio: 'GESTOR',
-               agente_vigilancia_epidemiologica: 'TECNICO',
-               agente_combate_endemias: 'ENDEMIAS' }[currentUser.perfil] || currentUser.perfil);
+            {
+                admin: 'ADMINISTRADOR',
+                municipio: 'GESTOR',
+                agente_vigilancia_epidemiologica: 'TECNICO',
+                agente_combate_endemias: 'ENDEMIAS',
+            }[currentUser.perfil] || currentUser.perfil;
         ativoInput.checked = currentUser.ativo;
         forceResetInput.checked = currentUser.exigeTrocaSenha;
-        document.getElementById('edit-avatar').textContent = initials(currentUser.nome);
+        document.getElementById('edit-avatar').textContent = initials(
+            currentUser.nome
+        );
         document.getElementById('edit-name').textContent = currentUser.nome;
         document.getElementById('edit-login').textContent = currentUser.email;
 
         updateStatus();
         savedSnapshot = getSnapshot();
         if (modo === 'senha') {
-            setTimeout(() => document.getElementById('security-section').scrollIntoView({ behavior: 'smooth' }), 150);
+            setTimeout(
+                () =>
+                    document
+                        .getElementById('security-section')
+                        .scrollIntoView({ behavior: 'smooth' }),
+                150
+            );
         }
     } catch (error) {
         showToast(error.message, false);
@@ -104,8 +131,9 @@
         } else {
             status.textContent = 'Ativo';
         }
-        document.getElementById('deactivate-label').textContent =
-            active ? 'Desativar operador' : 'Ativar operador';
+        document.getElementById('deactivate-label').textContent = active
+            ? 'Desativar operador'
+            : 'Ativar operador';
     }
 
     ativoInput.addEventListener('change', updateStatus);
@@ -116,33 +144,40 @@
         updateStatus();
     });
 
-    document.getElementById('reset-password').addEventListener('click', async () => {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        const lowers = 'abcdefghijkmnpqrstuvwxyz';
-        const nums = '23456789';
-        const specials = '@#$%!&*';
-        const temporaryPassword =
-            'Vigia@' + chars[Math.floor(Math.random() * chars.length)] +
-            lowers[Math.floor(Math.random() * lowers.length)] +
-            nums[Math.floor(Math.random() * nums.length)] +
-            specials[Math.floor(Math.random() * specials.length)];
+    document
+        .getElementById('reset-password')
+        .addEventListener('click', async () => {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            const lowers = 'abcdefghijkmnpqrstuvwxyz';
+            const nums = '23456789';
+            const specials = '@#$%!&*';
+            const temporaryPassword =
+                'Vigia@' +
+                chars[Math.floor(Math.random() * chars.length)] +
+                lowers[Math.floor(Math.random() * lowers.length)] +
+                nums[Math.floor(Math.random() * nums.length)] +
+                specials[Math.floor(Math.random() * specials.length)];
 
-        try {
-            const response = await fetch(
-                `/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`,
-                { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                  credentials: 'same-origin', body: JSON.stringify({ senha: temporaryPassword }) }
-            );
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
-            forceResetInput.checked = true;
-            updateStatus();
-            if (savedSnapshot) savedSnapshot.exigeTrocaSenha = true;
-            showToast(`Senha provisória: ${temporaryPassword}`);
-        } catch (error) {
-            showToast(error.message, false);
-        }
-    });
+            try {
+                const response = await fetch(
+                    `/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ senha: temporaryPassword }),
+                    }
+                );
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+                forceResetInput.checked = true;
+                updateStatus();
+                if (savedSnapshot) savedSnapshot.exigeTrocaSenha = true;
+                showToast(`Senha provisória: ${temporaryPassword}`);
+            } catch (error) {
+                showToast(error.message, false);
+            }
+        });
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -154,10 +189,15 @@
             exigeTrocaSenha: forceResetInput.checked,
         };
         try {
-            const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin', body: JSON.stringify(payload),
-            });
+            const response = await fetch(
+                `/api/usuarios/${encodeURIComponent(usuario)}`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload),
+                }
+            );
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
             savedSnapshot = getSnapshot();
@@ -168,10 +208,15 @@
         }
     });
 
-    document.getElementById('logout-btn')?.addEventListener('click', async (event) => {
-        event.preventDefault();
-        await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
-        localStorage.removeItem('usuarioLogado');
-        window.location.replace('/html/login.html');
-    });
+    document
+        .getElementById('logout-btn')
+        ?.addEventListener('click', async (event) => {
+            event.preventDefault();
+            await fetch('/logout', {
+                method: 'POST',
+                credentials: 'same-origin',
+            });
+            localStorage.removeItem('usuarioLogado');
+            window.location.replace('/html/login.html');
+        });
 });

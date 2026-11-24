@@ -1,0 +1,44 @@
+name: CI
+
+on:
+    pull_request:
+        branches: [main]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Baixar codigo
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: npm
+                  cache-dependency-path: |
+                      package-lock.json
+                      backend/package-lock.json
+
+            # Instalar ferramentas da raiz
+            - name: Instalar dependencias da raiz
+              run: npm ci
+
+            # Verificar qualidade do codigo
+            - name: Verificar ESLint
+              run: npm run lint
+
+            # Verificar formatacao
+            - name: Verificar Prettier
+              run: npm run format:check
+
+            # Instalar dependencias do backend
+            - name: Instalar dependencias do backend
+              run: npm ci
+              working-directory: backend
+
+            # Executar testes automatizados
+            - name: Executar testes do backend
+              run: npm test
+              working-directory: backend

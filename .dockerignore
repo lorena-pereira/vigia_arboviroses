@@ -8,4 +8,5 @@
 **/.DS_Store
 backend/data
 .env
+env
 *.zip

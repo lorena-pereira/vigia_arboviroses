@@ -43,22 +43,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/login', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ usuario, senha })
+                body: JSON.stringify({ usuario, senha }),
             });
 
-            // converte os dados recebidos 
+            // converte os dados recebidos
             const data = await response.json();
 
             // verifica se a resposta teve sucesso
             if (response.ok && data.success) {
                 const usuarioLogado = data.user || {
                     nome: usuario,
-                    perfil: data.profile || 'Usuário'
+                    perfil: data.profile || 'Usuário',
                 };
 
-                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
+                localStorage.setItem(
+                    'usuarioLogado',
+                    JSON.stringify(usuarioLogado)
+                );
+                sessionStorage.removeItem('sessionExpirationAt');
 
                 // Redireciona substituindo a página no histórico
                 window.location.replace(data.redirect || '/index.html');
@@ -68,10 +72,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 passwordInput.value = '';
                 passwordInput.focus();
             }
-
         } catch (error) {
             console.error('Erro de conexão:', error);
-            alert('Não foi possível conectar ao servidor. Verifique se o Back-end está rodando.');
+            alert(
+                'Não foi possível conectar ao servidor. Verifique se o Back-end está rodando.'
+            );
         }
     });
 });

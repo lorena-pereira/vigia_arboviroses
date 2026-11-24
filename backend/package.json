@@ -1,3 +1,4 @@
+
 {
     "type": "module",
     "name": "backend",
@@ -7,19 +8,25 @@
     "author": "",
     "main": "server.js",
     "scripts": {
-        "test": "jest",
+        "test": "node --test test/login.test.js && node --test test/perfil.test.js && node --test test/protecao-rotas.test.js",
+        "start": "node server.js",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "format": "prettier --write .",
         "format:check": "prettier --check ."
     },
     "dependencies": {
+        "bcryptjs": "^3.0.3",
         "cors": "^2.8.6",
-        "express": "^5.3.0"
+        "dotenv": "^18.0.10",
+        "express": "^5.3.0",
+        "mysql2": "^3.24.6"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@ljharb/eslint-config": "^22.2.5",
         "eslint-config-prettier": "^10.1.8",
+        "globals": "^17.14.0",
         "jest": "^30.5.2",
         "prettier": "^3.10.1"
     }

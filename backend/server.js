@@ -3,8 +3,10 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
+
 import {
     purgeExpiredSessions,
+    SESSION_TIMEOUT_MS,
     SESSION_WARNING_MS,
     sessions,
 } from './src/sessionStore.js';
@@ -125,6 +127,48 @@ app.get('/cadastrar-paciente.html', (req, res) => {
         path.join(__dirname, '../frontend/html/cadastrar-paciente.html')
     );
 });
+
+// Renova a expiracao da sessao atual.
+app.post('/api/session/renew', (req, res) => {
+    const session = validarSessao(req);
+
+    if (!session) {
+        res.clearCookie('sessionId', { path: '/' });
+        return res.status(401).json({
+            authenticated: false,
+            message: 'Sessão inválida ou expirada.',
+        });
+    }
+
+    session.expiresAt = Date.now() + SESSION_TIMEOUT_MS;
+
+    return res.status(200).json({
+        authenticated: true,
+        expiresInMs: SESSION_TIMEOUT_MS,
+        warning: false,
+    });
+});
+
+// Renova a expiração da sessão atual para o tempo limite total da sessão.
+app.post('/api/session/renew', (req, res) => {
+    const session = validarSessao(req);
+
+    if (!session) {
+        res.clearCookie('sessionId', { path: '/' });
+        return res.status(401).json({
+            authenticated: false,
+            message: 'Sessão inválida ou expirada.',
+        });
+    }
+
+    session.expiresAt = Date.now() + SESSION_TIMEOUT_MS;
+
+    return res.status(200).json({
+        authenticated: true,
+        expiresInMs: SESSION_TIMEOUT_MS,
+        warning: false,
+    });
+ });
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const port = process.env.PORT || 3000;

@@ -5,6 +5,7 @@ import express from 'express';
 import { app } from '../server.js';
 import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
+import { db } from '../src/config/db.js';
 import {
     PERFIS,
     normalizarPerfil,
@@ -18,8 +19,20 @@ before(() => {
     server = app.listen(0);
     base = `http://127.0.0.1:${server.address().port}`;
 });
-after(() => server.close());
-beforeEach(() => {
+after(async () => {
+    await new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            resolve();
+        });
+    });
+
+    await db.end();
+});beforeEach(() => {
     tentativas.clear();
     sessions.clear();
 });

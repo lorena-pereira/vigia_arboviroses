@@ -20,7 +20,7 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-const r = await autenticar(usuario, senha);
+        const r = await autenticar(usuario, senha);
         if (r.ok) {
             const sessionId = randomUUID();
             const session = {

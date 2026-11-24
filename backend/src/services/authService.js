@@ -1,4 +1,3 @@
-
 import bcrypt from 'bcryptjs';
 import { buscarUsuarioAtivo } from '../repositories/userRepository.js';
 
@@ -38,9 +37,7 @@ export async function autenticar(usuario, senha) {
         return {
             ok: false,
             motivo: 'bloqueado',
-            minutosRestantes: Math.ceil(
-                (estado.bloqueadoAte - agora) / 60000
-            ),
+            minutosRestantes: Math.ceil((estado.bloqueadoAte - agora) / 60000),
         };
     }
 
@@ -57,10 +54,7 @@ export async function autenticar(usuario, senha) {
     let senhaCorreta = false;
 
     if (user && user.senha_hash) {
-        senhaCorreta = await bcrypt.compare(
-            senha,
-            user.senha_hash
-        );
+        senhaCorreta = await bcrypt.compare(senha, user.senha_hash);
     }
 
     // Login válido
@@ -77,8 +71,7 @@ export async function autenticar(usuario, senha) {
     estado.falhas += 1;
 
     if (estado.falhas >= MAX_TENTATIVAS) {
-        estado.bloqueadoAte =
-            agora + MINUTOS_BLOQUEIO * 60000;
+        estado.bloqueadoAte = agora + MINUTOS_BLOQUEIO * 60000;
 
         tentativas.set(usuario, estado);
 

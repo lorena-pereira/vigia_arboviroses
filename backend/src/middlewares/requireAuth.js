@@ -42,14 +42,14 @@ export function requireAuth(req, res, next) {
 
     if (!session) {
         res.clearCookie('sessionId', { path: '/' });
-if (!session) {
-    res.clearCookie('sessionId', { path: '/' });
+        if (!session) {
+            res.clearCookie('sessionId', { path: '/' });
 
-    return res.status(401).json({
-        authenticated: false,
-        message: 'Sessão inválida ou expirada.',
-    });
-}
+            return res.status(401).json({
+                authenticated: false,
+                message: 'Sessão inválida ou expirada.',
+            });
+        }
     }
 
     req.session = session;

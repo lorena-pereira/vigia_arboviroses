@@ -1,13 +1,10 @@
-
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 
 // Carrega as variáveis do .env da raiz do projeto
 dotenv.config({
-    path: fileURLToPath(
-        new URL('../../../.env', import.meta.url)
-    ),
+    path: fileURLToPath(new URL('../../../.env', import.meta.url)),
 });
 
 // Cria o pool de conexões com o MySQL

@@ -168,7 +168,7 @@ app.post('/api/session/renew', (req, res) => {
         expiresInMs: SESSION_TIMEOUT_MS,
         warning: false,
     });
- });
+});
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const port = process.env.PORT || 3000;

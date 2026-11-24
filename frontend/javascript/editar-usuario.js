@@ -21,7 +21,6 @@
     const perfilInput = document.getElementById('edit-perfil');
     const ativoInput = document.getElementById('edit-ativo');
     const forceResetInput = document.getElementById('force-reset');
-    let currentUser = null;
     let savedSnapshot = null;
 
     function showToast(message, success = true) {
@@ -67,7 +66,7 @@
         const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { credentials: 'same-origin' });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
-        currentUser = data.user;
+        const currentUser = data.user;
 
         nomeInput.value = currentUser.nome;
         document.getElementById('edit-usuario').value = currentUser.usuario;

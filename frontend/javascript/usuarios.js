@@ -85,7 +85,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.message);
         users = data.users || [];
-    } catch (error) {
+    } catch {
         body.innerHTML = '<tr><td colspan="5">Não foi possível carregar os usuários.</td></tr>';
     }
 

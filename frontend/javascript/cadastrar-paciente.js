@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('form-cadastrar-paciente');
 
     const cpfInput = document.getElementById('cpf');
@@ -8,53 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataNascimentoInput = document.getElementById('dataDeNascimento');
     const camposDeTexto = ['nome', 'nomeDaMae', 'racaCor', 'escolaridade'];
 
-    // toasts de aviso
-    let toastTimeout;
+    // avisos (usa toast compartilhado quando disponível)
     function showWarning(message) {
-        let toast = document.getElementById('input-warning-toast');
-
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'input-warning-toast';
-            Object.assign(toast.style, {
-                position: 'fixed',
-                top: '24px',
-                right: '24px',
-                backgroundColor: '#EF4444', // Vermelho (alerta)
-                color: 'white',
-                padding: '12px 20px',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                zIndex: '10000',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                opacity: '0',
-                transition: 'opacity 0.3s ease, transform 0.3s ease',
-                transform: 'translateX(20px)',
-            });
-            document.body.appendChild(toast);
+        if (window.showToast) {
+            window.showToast(message, 'warning');
+            return;
         }
-
-        toast.innerHTML = `
-            <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i>
-            <span>${message}</span>
-        `;
-        if (window.lucide) lucide.createIcons();
-
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(0)';
-        }, 10);
-
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(20px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        window.alert(message);
     }
 
     /* formatações */
@@ -209,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('uf').value = data.uf || 'BA';
                         document.getElementById('numero').focus();
                     } else {
-                        alert('CEP não encontrado na base de dados.');
+                        if (window.showToast) { window.showToast('CEP não encontrado na base de dados.', 'warning'); } else { alert('CEP não encontrado na base de dados.'); }
                     }
                 } catch (error) {
                     console.error('Erro na consulta do CEP:', error);
@@ -251,14 +211,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    alert('Paciente cadastrado com sucesso!');
+                    if (window.showToast) { window.showToast('Paciente cadastrado com sucesso!', 'success'); } else { alert('Paciente cadastrado com sucesso!'); }
                     form.reset();
                 } else {
-                    alert(data.message || 'Erro ao cadastrar paciente.');
+                    if (window.showToast) { window.showToast((data && data.message) || 'Erro ao cadastrar paciente.', 'error'); } else { alert(data.message || 'Erro ao cadastrar paciente.'); }
                 }
             } catch (error) {
                 console.error('Erro de conexão:', error);
-                alert('Não foi possível conectar ao servidor.');
+                if (window.showToast) { window.showToast('Não foi possível conectar ao servidor.', 'error'); } else { alert('Não foi possível conectar ao servidor.'); }
             }
         });
     }

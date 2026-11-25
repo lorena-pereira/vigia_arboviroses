@@ -1,6 +1,7 @@
 ﻿document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await window.inicializarAutenticacao();
     if (!sessao) return;
+    if (window.applySidebarUser) window.applySidebarUser(sessao);
     if (sessao.perfil !== 'admin' && sessao.perfil !== 'ADMINISTRADOR') {
         window.location.replace('/index.html');
         return;
@@ -24,6 +25,11 @@
     let savedSnapshot = null;
 
     function showToast(message, success = true) {
+        if (window.showToast) {
+            window.showToast(message, success ? 'success' : 'error');
+            return;
+        }
+        if (!toast) return;
         toast.textContent = message;
         toast.style.background = success ? '#dcfce7' : '#fee2e2';
         toast.style.color = success ? '#166534' : '#991b1b';
@@ -67,20 +73,17 @@
             if (isDirty()) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                alert(
-                    'Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.'
-                );
+                if (window.showToast) { window.showToast('Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.', 'warning'); }
             }
         },
         true
     );
 
     try {
-        const response = await fetch(
-            `/api/usuarios/${encodeURIComponent(usuario)}`,
-            { credentials: 'same-origin' }
-        );
-        const data = await response.json();
+        const result = window.apiFetch
+            ? await window.apiFetch(`/api/usuarios/${encodeURIComponent(usuario)}`)
+            : await (async () => { const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { credentials: "same-origin" }); return { response, data: await response.json().catch(() => null) }; })();
+        const { response, data } = result;
         if (!response.ok) throw new Error(data.message);
         const currentUser = data.user;
 
@@ -159,16 +162,10 @@
                 specials[Math.floor(Math.random() * specials.length)];
 
             try {
-                const response = await fetch(
-                    `/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'same-origin',
-                        body: JSON.stringify({ senha: temporaryPassword }),
-                    }
-                );
-                const data = await response.json();
+                const result = window.apiFetch
+                    ? await window.apiFetch(`/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ senha: temporaryPassword }) })
+                    : await (async () => { const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ senha: temporaryPassword }) }); return { response, data: await response.json().catch(() => null) }; })();
+                const { response, data } = result;
                 if (!response.ok) throw new Error(data.message);
                 forceResetInput.checked = true;
                 updateStatus();
@@ -189,16 +186,10 @@
             exigeTrocaSenha: forceResetInput.checked,
         };
         try {
-            const response = await fetch(
-                `/api/usuarios/${encodeURIComponent(usuario)}`,
-                {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(payload),
-                }
-            );
-            const data = await response.json();
+            const result = window.apiFetch
+                ? await window.apiFetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+                : await (async () => { const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(payload) }); return { response, data: await response.json().catch(() => null) }; })();
+            const { response, data } = result;
             if (!response.ok) throw new Error(data.message);
             savedSnapshot = getSnapshot();
             showToast(data.message);
@@ -212,10 +203,11 @@
         .getElementById('logout-btn')
         ?.addEventListener('click', async (event) => {
             event.preventDefault();
-            await fetch('/logout', {
-                method: 'POST',
-                credentials: 'same-origin',
-            });
+            if (window.apiFetch) {
+                await window.apiFetch('/logout', { method: 'POST', redirectOn401: false });
+            } else {
+                await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+            }
             localStorage.removeItem('usuarioLogado');
             window.location.replace('/html/login.html');
         });

@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
     const usuarioLogado = JSON.parse(
         localStorage.getItem('usuarioLogado') || 'null'
     );
@@ -88,12 +88,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const encerrarSessao = async () => {
         try {
-            await fetch('/logout', {
-                method: 'POST',
-                credentials: 'same-origin',
-            });
+            if (window.apiFetch) {
+                await window.apiFetch('/logout', { method: 'POST', redirectOn401: false });
+            } else {
+                await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+            }
         } catch (error) {
-            console.error('Erro ao encerrar sessão:', error);
         }
 
         sessionStorage.removeItem('sessionExpirationAt');
@@ -114,13 +114,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!renovar) return;
 
         try {
-            const response = await fetch('/api/session/renew', {
-                method: 'POST',
-                credentials: 'same-origin',
-            });
-            const data = await response.json();
+            const result = window.apiFetch
+                ? await window.apiFetch('/api/session/renew', { method: 'POST', redirectOn401: false })
+                : await (async () => { const response = await fetch('/api/session/renew', { method: 'POST', credentials: 'same-origin' }); return { response, data: await response.json().catch(() => null) }; })();
+            const { response, data } = result;
 
-            if (!response.ok || !data.authenticated) {
+            if (!response.ok || !data?.authenticated) {
+                await encerrarSessao();
                 await encerrarSessao();
                 return;
             }
@@ -131,10 +131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 String(sessionExpirationAt)
             );
             alertaSessaoExibido = false;
-            window.alert('Sessão renovada com sucesso!');
+            if (window.showToast) { window.showToast('Sessão renovada com sucesso!', 'success'); }
         } catch (error) {
             console.error('Erro ao renovar sessão:', error);
-            window.alert('Não foi possível renovar a sessão.');
+            if (window.showToast) { window.showToast('Não foi possível renovar a sessão.', 'error'); }
         }
     };
 

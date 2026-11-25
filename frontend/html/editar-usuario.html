@@ -5,22 +5,12 @@
     <title>Editar Usuário | Vigia Arboviroses</title>
     <link rel="stylesheet" href="../css/index.css"><link rel="stylesheet" href="../css/usuarios.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+        <script src="../javascript/toast.js"></script>
+        <script src="../javascript/api.js"></script>
+    </head>
 <body>
 <div class="app-container">
-    <aside class="sidebar">
-        <div class="sidebar-header"><div class="brand-icon"><i data-lucide="activity"></i></div><h2>Vigia<br>Arboviroses</h2></div>
-        <nav class="sidebar-nav">
-            <a href="/index.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Painel Geral</span></a>
-            <div class="nav-item-group">
-                <button class="nav-item-toggle" type="button"><div class="toggle-left"><i data-lucide="users"></i><span>Pacientes</span></div><i data-lucide="chevron-down" class="arrow-icon"></i></button>
-                <div class="nav-submenu"><a href="/cadastrar-paciente.html" class="submenu-item">Cadastrar Paciente</a></div>
-            </div>
-            <a href="#" class="nav-item"><i data-lucide="file-text"></i><span>Notificações</span></a>
-            <a href="/usuarios.html" class="nav-item active" data-admin-only><i data-lucide="users-round"></i><span>Usuários</span></a>
-        </nav>
-        <div class="sidebar-footer"><a href="#" id="logout-btn" class="nav-item"><i data-lucide="log-out"></i><span>Encerrar sessão</span></a></div>
-    </aside>
+    <aside class="sidebar" data-shared-sidebar></aside>
     <main class="main-content">
         <header class="topbar">
             <div class="page-title"><h1>Editar Usuário</h1><p>Município: Vitória da Conquista - BA</p></div>

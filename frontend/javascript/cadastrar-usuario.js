@@ -10,8 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('form-usuario');
     const toastEl = document.getElementById('toast');
     const notify = (message, type = 'info') => {
-        if (window.showToast) { window.showToast(message, type); return; }
-        if (toastEl) { toastEl.textContent = message; toastEl.style.display = 'block'; }
+        if (window.showToast) {
+            window.showToast(message, type);
+            return;
+        }
+        if (toastEl) {
+            toastEl.textContent = message;
+            toastEl.style.display = 'block';
+        }
     };
 
     form.addEventListener('submit', async (event) => {
@@ -27,10 +33,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(data),
                   })
-                : await (async () => { const response = await fetch('/api/usuarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(data) }); return { response, data: await response.json().catch(() => null) }; })();
+                : await (async () => {
+                      const response = await fetch('/api/usuarios', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'same-origin',
+                          body: JSON.stringify(data),
+                      });
+                      return {
+                          response,
+                          data: await response.json().catch(() => null),
+                      };
+                  })();
             const { response, data: payload } = result;
             if (!response.ok)
-                throw new Error(payload?.message || 'Erro ao cadastrar usuário.');
+                throw new Error(
+                    payload?.message || 'Erro ao cadastrar usuário.'
+                );
 
             notify('Usuário cadastrado com sucesso.', 'success');
             setTimeout(() => window.location.replace('/usuarios.html'), 900);

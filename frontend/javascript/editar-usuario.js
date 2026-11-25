@@ -73,7 +73,12 @@
             if (isDirty()) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                if (window.showToast) { window.showToast('Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.', 'warning'); }
+                if (window.showToast) {
+                    window.showToast(
+                        'Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.',
+                        'warning'
+                    );
+                }
             }
         },
         true
@@ -81,8 +86,19 @@
 
     try {
         const result = window.apiFetch
-            ? await window.apiFetch(`/api/usuarios/${encodeURIComponent(usuario)}`)
-            : await (async () => { const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { credentials: "same-origin" }); return { response, data: await response.json().catch(() => null) }; })();
+            ? await window.apiFetch(
+                  `/api/usuarios/${encodeURIComponent(usuario)}`
+              )
+            : await (async () => {
+                  const response = await fetch(
+                      `/api/usuarios/${encodeURIComponent(usuario)}`,
+                      { credentials: 'same-origin' }
+                  );
+                  return {
+                      response,
+                      data: await response.json().catch(() => null),
+                  };
+              })();
         const { response, data } = result;
         if (!response.ok) throw new Error(data.message);
         const currentUser = data.user;
@@ -163,8 +179,35 @@
 
             try {
                 const result = window.apiFetch
-                    ? await window.apiFetch(`/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ senha: temporaryPassword }) })
-                    : await (async () => { const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ senha: temporaryPassword }) }); return { response, data: await response.json().catch(() => null) }; })();
+                    ? await window.apiFetch(
+                          `/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`,
+                          {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                  senha: temporaryPassword,
+                              }),
+                          }
+                      )
+                    : await (async () => {
+                          const response = await fetch(
+                              `/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`,
+                              {
+                                  method: 'POST',
+                                  headers: {
+                                      'Content-Type': 'application/json',
+                                  },
+                                  credentials: 'same-origin',
+                                  body: JSON.stringify({
+                                      senha: temporaryPassword,
+                                  }),
+                              }
+                          );
+                          return {
+                              response,
+                              data: await response.json().catch(() => null),
+                          };
+                      })();
                 const { response, data } = result;
                 if (!response.ok) throw new Error(data.message);
                 forceResetInput.checked = true;
@@ -187,8 +230,29 @@
         };
         try {
             const result = window.apiFetch
-                ? await window.apiFetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-                : await (async () => { const response = await fetch(`/api/usuarios/${encodeURIComponent(usuario)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(payload) }); return { response, data: await response.json().catch(() => null) }; })();
+                ? await window.apiFetch(
+                      `/api/usuarios/${encodeURIComponent(usuario)}`,
+                      {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(payload),
+                      }
+                  )
+                : await (async () => {
+                      const response = await fetch(
+                          `/api/usuarios/${encodeURIComponent(usuario)}`,
+                          {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'same-origin',
+                              body: JSON.stringify(payload),
+                          }
+                      );
+                      return {
+                          response,
+                          data: await response.json().catch(() => null),
+                      };
+                  })();
             const { response, data } = result;
             if (!response.ok) throw new Error(data.message);
             savedSnapshot = getSnapshot();
@@ -204,9 +268,15 @@
         ?.addEventListener('click', async (event) => {
             event.preventDefault();
             if (window.apiFetch) {
-                await window.apiFetch('/logout', { method: 'POST', redirectOn401: false });
+                await window.apiFetch('/logout', {
+                    method: 'POST',
+                    redirectOn401: false,
+                });
             } else {
-                await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+                await fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                });
             }
             localStorage.removeItem('usuarioLogado');
             window.location.replace('/html/login.html');

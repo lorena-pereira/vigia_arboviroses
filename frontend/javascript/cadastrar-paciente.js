@@ -169,7 +169,14 @@
                         document.getElementById('uf').value = data.uf || 'BA';
                         document.getElementById('numero').focus();
                     } else {
-                        if (window.showToast) { window.showToast('CEP não encontrado na base de dados.', 'warning'); } else { alert('CEP não encontrado na base de dados.'); }
+                        if (window.showToast) {
+                            window.showToast(
+                                'CEP não encontrado na base de dados.',
+                                'warning'
+                            );
+                        } else {
+                            alert('CEP não encontrado na base de dados.');
+                        }
                     }
                 } catch (error) {
                     console.error('Erro na consulta do CEP:', error);
@@ -211,14 +218,36 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    if (window.showToast) { window.showToast('Paciente cadastrado com sucesso!', 'success'); } else { alert('Paciente cadastrado com sucesso!'); }
+                    if (window.showToast) {
+                        window.showToast(
+                            'Paciente cadastrado com sucesso!',
+                            'success'
+                        );
+                    } else {
+                        alert('Paciente cadastrado com sucesso!');
+                    }
                     form.reset();
                 } else {
-                    if (window.showToast) { window.showToast((data && data.message) || 'Erro ao cadastrar paciente.', 'error'); } else { alert(data.message || 'Erro ao cadastrar paciente.'); }
+                    if (window.showToast) {
+                        window.showToast(
+                            (data && data.message) ||
+                                'Erro ao cadastrar paciente.',
+                            'error'
+                        );
+                    } else {
+                        alert(data.message || 'Erro ao cadastrar paciente.');
+                    }
                 }
             } catch (error) {
                 console.error('Erro de conexão:', error);
-                if (window.showToast) { window.showToast('Não foi possível conectar ao servidor.', 'error'); } else { alert('Não foi possível conectar ao servidor.'); }
+                if (window.showToast) {
+                    window.showToast(
+                        'Não foi possível conectar ao servidor.',
+                        'error'
+                    );
+                } else {
+                    alert('Não foi possível conectar ao servidor.');
+                }
             }
         });
     }

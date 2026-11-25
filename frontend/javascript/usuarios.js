@@ -18,9 +18,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         event.preventDefault();
         try {
             if (window.apiFetch) {
-                await window.apiFetch('/logout', { method: 'POST', redirectOn401: false });
+                await window.apiFetch('/logout', {
+                    method: 'POST',
+                    redirectOn401: false,
+                });
             } else {
-                await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+                await fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                });
             }
         } catch {}
         localStorage.removeItem('usuarioLogado');
@@ -105,14 +111,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const result = window.apiFetch
             ? await window.apiFetch('/api/usuarios')
-            : await (async () => { const response = await fetch('/api/usuarios', { credentials: 'same-origin' }); return { response, data: await response.json().catch(() => null) }; })();
+            : await (async () => {
+                  const response = await fetch('/api/usuarios', {
+                      credentials: 'same-origin',
+                  });
+                  return {
+                      response,
+                      data: await response.json().catch(() => null),
+                  };
+              })();
         const { response, data } = result;
         if (!response.ok) throw new Error(data?.message);
         users = data.users || [];
     } catch {
         body.innerHTML =
             '<tr><td colspan="5">Não foi possível carregar os usuários.</td></tr>';
-        if (window.showToast) window.showToast('Não foi possível carregar os usuários.', 'error');
+        if (window.showToast)
+            window.showToast('Não foi possível carregar os usuários.', 'error');
     }
 
     search.addEventListener('input', render);

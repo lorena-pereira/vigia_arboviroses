@@ -83,13 +83,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                       }),
                   })
                 : await (async () => {
-                      const response = await fetch('/api/usuarios/trocar-senha', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          credentials: 'same-origin',
-                          body: JSON.stringify({ senhaAtual: atual.value, novaSenha: nova.value }),
-                      });
-                      return { response, data: await response.json().catch(() => null), ok: response.ok };
+                      const response = await fetch(
+                          '/api/usuarios/trocar-senha',
+                          {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              credentials: 'same-origin',
+                              body: JSON.stringify({
+                                  senhaAtual: atual.value,
+                                  novaSenha: nova.value,
+                              }),
+                          }
+                      );
+                      return {
+                          response,
+                          data: await response.json().catch(() => null),
+                          ok: response.ok,
+                      };
                   })();
             const { response, data } = result;
             if (!response.ok)

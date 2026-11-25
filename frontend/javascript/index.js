@@ -89,12 +89,17 @@
     const encerrarSessao = async () => {
         try {
             if (window.apiFetch) {
-                await window.apiFetch('/logout', { method: 'POST', redirectOn401: false });
+                await window.apiFetch('/logout', {
+                    method: 'POST',
+                    redirectOn401: false,
+                });
             } else {
-                await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+                await fetch('/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                });
             }
-        } catch (error) {
-        }
+        } catch (error) {}
 
         sessionStorage.removeItem('sessionExpirationAt');
         localStorage.removeItem('usuarioLogado');
@@ -115,8 +120,20 @@
 
         try {
             const result = window.apiFetch
-                ? await window.apiFetch('/api/session/renew', { method: 'POST', redirectOn401: false })
-                : await (async () => { const response = await fetch('/api/session/renew', { method: 'POST', credentials: 'same-origin' }); return { response, data: await response.json().catch(() => null) }; })();
+                ? await window.apiFetch('/api/session/renew', {
+                      method: 'POST',
+                      redirectOn401: false,
+                  })
+                : await (async () => {
+                      const response = await fetch('/api/session/renew', {
+                          method: 'POST',
+                          credentials: 'same-origin',
+                      });
+                      return {
+                          response,
+                          data: await response.json().catch(() => null),
+                      };
+                  })();
             const { response, data } = result;
 
             if (!response.ok || !data?.authenticated) {
@@ -131,10 +148,14 @@
                 String(sessionExpirationAt)
             );
             alertaSessaoExibido = false;
-            if (window.showToast) { window.showToast('Sessão renovada com sucesso!', 'success'); }
+            if (window.showToast) {
+                window.showToast('Sessão renovada com sucesso!', 'success');
+            }
         } catch (error) {
             console.error('Erro ao renovar sessão:', error);
-            if (window.showToast) { window.showToast('Não foi possível renovar a sessão.', 'error'); }
+            if (window.showToast) {
+                window.showToast('Não foi possível renovar a sessão.', 'error');
+            }
         }
     };
 

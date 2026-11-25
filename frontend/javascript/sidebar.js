@@ -1,14 +1,20 @@
 (function () {
     function normalizePath(pathname) {
         const path = String(pathname || '').split('?')[0];
-        if (path === '/' || path === '/index.html' || path.endsWith('/index.html')) {
+        if (
+            path === '/' ||
+            path === '/index.html' ||
+            path.endsWith('/index.html')
+        ) {
             return '/index.html';
         }
         return path.startsWith('/') ? path : `/${path}`;
     }
 
     function renderSidebar() {
-        const sidebar = document.querySelector('aside.sidebar[data-shared-sidebar]');
+        const sidebar = document.querySelector(
+            'aside.sidebar[data-shared-sidebar]'
+        );
         if (!sidebar) return;
 
         const current = normalizePath(window.location.pathname);
@@ -88,7 +94,9 @@
         }
 
         try {
-            const stored = JSON.parse(localStorage.getItem('usuarioLogado') || 'null');
+            const stored = JSON.parse(
+                localStorage.getItem('usuarioLogado') || 'null'
+            );
             if (stored) applySidebarUser(stored);
         } catch {}
     });

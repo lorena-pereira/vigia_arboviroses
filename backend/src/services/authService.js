@@ -1,4 +1,3 @@
-
 import bcrypt from 'bcryptjs';
 import { buscarUsuarioAtivo } from '../repositories/userRepository.js';
 
@@ -37,9 +36,7 @@ export async function autenticar(usuario, senha) {
         return {
             ok: false,
             motivo: 'bloqueado',
-            minutosRestantes: Math.ceil(
-                (estado.bloqueadoAte - agora) / 60000
-            ),
+            minutosRestantes: Math.ceil((estado.bloqueadoAte - agora) / 60000),
         };
     }
 

@@ -32,7 +32,8 @@ after(async () => {
     });
 
     await db.end();
-});beforeEach(() => {
+});
+beforeEach(() => {
     tentativas.clear();
     sessions.clear();
 });

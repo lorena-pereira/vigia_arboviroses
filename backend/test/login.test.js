@@ -30,7 +30,8 @@ after(async () => {
     });
 
     await db.end();
-});beforeEach(() => tentativas.clear());
+});
+beforeEach(() => tentativas.clear());
 
 const loginComCookie = async () => {
     const r = await fetch(base + '/login', {

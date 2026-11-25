@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
@@ -20,13 +20,20 @@ const connection = await mysql.createConnection({
 });
 
 try {
-    // Cria todas as tabelas e relacionamentos do projeto.
-    const schema = await readFile(
-        new URL('../database/migrations/001_schema.sql', import.meta.url),
-        'utf8'
-    );
+    // Executa todas as migracoes SQL em ordem.
+    const migrationsDir = new URL('../database/migrations/', import.meta.url);
 
-    await connection.query(schema);
+    const migrations = (await readdir(migrationsDir))
+        .filter((file) => file.endsWith('.sql'))
+        .sort();
+
+    for (const migration of migrations) {
+        const sql = await readFile(new URL(migration, migrationsDir), 'utf8');
+
+        await connection.query(sql);
+
+        console.log(`Migracao executada: ${migration}`);
+    }
 
     // Contas fictícias exclusivas para os testes automatizados.
     const usuarios = [

@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Usuário | Vigia Arboviroses</title>
+    <link rel="stylesheet" href="../css/index.css"><link rel="stylesheet" href="../css/usuarios.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="brand-icon"><i data-lucide="activity"></i></div><h2>Vigia<br>Arboviroses</h2></div>
+        <nav class="sidebar-nav">
+            <a href="/index.html" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Painel Geral</span></a>
+            <div class="nav-item-group">
+                <button class="nav-item-toggle" type="button"><div class="toggle-left"><i data-lucide="users"></i><span>Pacientes</span></div><i data-lucide="chevron-down" class="arrow-icon"></i></button>
+                <div class="nav-submenu"><a href="/cadastrar-paciente.html" class="submenu-item">Cadastrar Paciente</a></div>
+            </div>
+            <a href="#" class="nav-item"><i data-lucide="file-text"></i><span>Notificações</span></a>
+            <a href="/usuarios.html" class="nav-item active" data-admin-only><i data-lucide="users-round"></i><span>Usuários</span></a>
+        </nav>
+        <div class="sidebar-footer"><a href="#" id="logout-btn" class="nav-item"><i data-lucide="log-out"></i><span>Encerrar sessão</span></a></div>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <div class="page-title"><h1>Editar Usuário</h1><p>Município: Vitória da Conquista - BA</p></div>
+            <div class="user-profile"><div class="avatar"><i data-lucide="user"></i></div><div class="user-info"><span id="user-name">Administrador</span><small id="user-role">Administrador</small></div></div>
+        </header>
+        <div class="dashboard-content">
+            <div class="prototype-banner"><i data-lucide="shield-check"></i> Gestão segura de contas e permissões institucionais.</div>
+            <div class="edit-heading">
+                <div><a class="btn btn-secondary" href="/usuarios.html"><i data-lucide="arrow-left"></i>Voltar para Lista de Usuários</a><h1 style="margin-top:12px">Editar Usuário</h1><p>Atualize os dados, o perfil de acesso e a segurança da conta.</p></div>
+                <div class="edit-summary"><div class="avatar-user" id="edit-avatar">--</div><div><strong id="edit-name">Carregando...</strong><small id="edit-login"></small></div></div>
+            </div>
+            <form id="edit-user-form">
+                <section class="form-card">
+                    <h2>Dados do usuário</h2>
+                    <div class="edit-grid">
+                        <div class="field"><label for="edit-nome">Nome completo <span class="required">*</span></label><input id="edit-nome" name="nome" required></div>
+                        <div class="field"><label for="edit-usuario">Usuário / matrícula</label><input id="edit-usuario" disabled></div>
+                        <div class="field"><label for="edit-email">E-mail institucional <span class="required">*</span></label><input id="edit-email" name="email" type="email" required></div>
+                        <div class="field"><label for="edit-perfil">Perfil de acesso <span class="required">*</span></label><select id="edit-perfil" name="perfil" required><option value="ADMINISTRADOR">Administrador</option><option value="TECNICO">Agente de Vigilância Epidemiológica</option><option value="GESTOR">Munícipe</option><option value="ENDEMIAS">Agente de Combate de Endemias</option></select></div>
+                        <div class="full"><label class="checkbox-label" for="edit-ativo"><input id="edit-ativo" type="checkbox" name="ativo"><span>Conta ativa</span></label></div>
+                    </div>
+                </section>
+                <section class="form-card" id="security-section">
+                    <h2>Segurança e credenciais</h2>
+                    <div class="security-grid">
+                        <div class="security-box">
+                            <h3>Status da conta</h3>
+                            <div class="status-row"><span class="account-status" id="account-status">Ativo</span></div>
+                            <label class="checkbox-label" for="force-reset"><input id="force-reset" type="checkbox"><span>Forçar troca obrigatória no próximo acesso</span></label>
+                        </div>
+                        <div class="security-box">
+                            <h3>Redefinição de senha</h3>
+                            <p>Gera uma senha provisória segura e exige a troca no próximo acesso.</p>
+                            <button class="btn btn-secondary" id="reset-password" type="button"><i data-lucide="key-round"></i>Redefinir senha</button>
+                        </div>
+                    </div>
+                </section>
+                <div class="edit-actions">
+                    <button class="btn danger-button" id="deactivate-user" type="button"><i data-lucide="user-x"></i><span id="deactivate-label">Desativar operador</span></button>
+                    <div class="edit-actions-right"><a class="btn btn-secondary" href="/usuarios.html">Cancelar</a><button class="btn btn-primary" type="submit"><i data-lucide="check"></i>Salvar alterações</button></div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast"></div>
+<script src="../javascript/auth.js"></script>
+<script src="../javascript/sidebar.js"></script>
+<script src="../javascript/editar-usuario.js"></script>
+<script>lucide.createIcons();</script>
+</body>
+</html>

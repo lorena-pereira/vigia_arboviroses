@@ -1,3 +1,4 @@
+
 import bcrypt from 'bcryptjs';
 import { buscarUsuarioAtivo } from '../repositories/userRepository.js';
 
@@ -7,8 +8,7 @@ export const MINUTOS_BLOQUEIO = 15;
 // Controle de tentativas de login
 export const tentativas = new Map();
 
-// Converte os perfis do banco para os nomes usados
-// atualmente pelo restante do sistema.
+// Converte os perfis do banco para os nomes usados pelo restante do sistema.
 const PERFIS = {
     ADMINISTRADOR: 'admin',
     TECNICO: 'agente_vigilancia_epidemiologica',
@@ -17,10 +17,10 @@ const PERFIS = {
 };
 
 /**
- * Autentica o usuário utilizando o MySQL e bcrypt.
+ * Autentica o usuário utilizando MySQL e bcrypt.
  *
  * Resultado:
- * { ok: true, perfil }
+ * { ok: true, perfil, exigeTrocaSenha }
  * { ok: false, motivo: 'credenciais' }
  * { ok: false, motivo: 'bloqueado', minutosRestantes }
  */
@@ -32,42 +32,45 @@ export async function autenticar(usuario, senha) {
         bloqueadoAte: 0,
     };
 
-    // Verifica se o usuário está bloqueado
+    // Verifica se o usuário está bloqueado.
     if (estado.bloqueadoAte > agora) {
         return {
             ok: false,
             motivo: 'bloqueado',
-            minutosRestantes: Math.ceil((estado.bloqueadoAte - agora) / 60000),
+            minutosRestantes: Math.ceil(
+                (estado.bloqueadoAte - agora) / 60000
+            ),
         };
     }
 
-    // Reinicia a contagem quando o bloqueio expira
+    // Reinicia a contagem quando o bloqueio expira.
     if (estado.bloqueadoAte && estado.bloqueadoAte <= agora) {
         estado.falhas = 0;
         estado.bloqueadoAte = 0;
     }
 
-    // Consulta o usuário ativo no MySQL
+    // Consulta o usuário ativo no MySQL.
     const user = await buscarUsuarioAtivo(usuario);
 
-    // Compara a senha digitada com o hash armazenado
+    // Compara a senha digitada com o hash armazenado.
     let senhaCorreta = false;
 
     if (user && user.senha_hash) {
         senhaCorreta = await bcrypt.compare(senha, user.senha_hash);
     }
 
-    // Login válido
+    // Login válido.
     if (user && senhaCorreta) {
         tentativas.delete(usuario);
 
         return {
             ok: true,
             perfil: PERFIS[user.perfil] || user.perfil,
+            exigeTrocaSenha: Boolean(user.deve_trocar_senha),
         };
     }
 
-    // Login inválido: conta a tentativa
+    // Login inválido: contabiliza a tentativa.
     estado.falhas += 1;
 
     if (estado.falhas >= MAX_TENTATIVAS) {

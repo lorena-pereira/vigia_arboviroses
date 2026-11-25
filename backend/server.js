@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
@@ -18,6 +19,7 @@ import {
 } from './src/middlewares/requireAuth.js';
 import { PERFIS, requireRole } from './src/middlewares/requireRole.js';
 import pacientesRoutes from './src/routes/pacientes.js';
+import usuariosRoutes from './src/routes/usuarios.js';
 
 // mantido para quem já importava validarSessao do server.js
 export { validarSessao };
@@ -87,6 +89,7 @@ app.get('/api/session', (req, res) => {
         user: {
             nome: session.usuario,
             perfil: session.perfil,
+            exigeTrocaSenha: Boolean(session.exigeTrocaSenha),
         },
     });
 });
@@ -113,10 +116,46 @@ app.use('/api', requireAuth);
 // Aplicada por prefixo: qualquer rota criada depois dentro desses caminhos já nasce restrita.
 // Pacientes: só o Técnico (Gestor e Administrador não recebem nome, CPF nem telefone).
 app.use('/api/pacientes', requireRole(PERFIS.TECNICO));
+// Troca da própria senha: disponível para qualquer perfil autenticado.
+app.post('/api/usuarios/trocar-senha', (req, res) => {
+    const senhaAtual = String(req.body?.senhaAtual || '');
+    const novaSenha = String(req.body?.novaSenha || '');
+    if (!req.session?.usuario || !senhaAtual || !novaSenha) {
+        return res.status(400).json({
+            success: false,
+            message: 'Informe a senha atual e a nova senha.',
+        });
+    }
+    if (novaSenha.length < 8) {
+        return res.status(400).json({
+            success: false,
+            message: 'A nova senha deve ter pelo menos 8 caracteres.',
+        });
+    }
+
+    const usersFilePath = new URL('./data/users.json', import.meta.url);
+    const users = JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
+    const user = users.find((item) => item.user === req.session.usuario);
+    if (!user || user.password !== senhaAtual) {
+        return res.status(401).json({
+            success: false,
+            message: 'Senha provisória atual inválida.',
+        });
+    }
+
+    user.password = novaSenha;
+    user.exigeTrocaSenha = false;
+    fs.writeFileSync(usersFilePath, `${JSON.stringify(users, null, 4)}\n`);
+    req.session.exigeTrocaSenha = false;
+    return res.status(200).json({
+        success: true,
+        message: 'Senha redefinida com sucesso.',
+    });
+});
 // Gestão de usuários: só o Administrador.
 app.use('/api/usuarios', requireRole(PERFIS.ADMINISTRADOR));
-
 app.use(pacientesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/html/index.html'));

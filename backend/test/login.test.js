@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { app } from '../server.js';
 import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
-
+import { db } from '../src/config/db.js';
 let server, base;
 const post = (body) =>
     fetch(base + '/login', {
@@ -17,7 +17,20 @@ before(() => {
     server = app.listen(0);
     base = `http://127.0.0.1:${server.address().port}`;
 });
-after(() => server.close());
+after(async () => {
+    await new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            resolve();
+        });
+    });
+
+    await db.end();
+});
 beforeEach(() => tentativas.clear());
 
 const loginComCookie = async () => {

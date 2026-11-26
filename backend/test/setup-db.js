@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import bcrypt from 'bcryptjs';
 import mysql from 'mysql2/promise';
 import {
@@ -21,9 +21,12 @@ const connection = await mysql.createConnection({
 try {
     await validarBancoTeste(connection);
 
-    // Cria todas as tabelas e relacionamentos do projeto.
+    const migrationsDir = new URL('../database/migrations/', import.meta.url);
+    const [initialMigration, ...migrations] = (await readdir(migrationsDir))
+        .filter((file) => file.endsWith('.sql'))
+        .sort();
     const schema = await readFile(
-        new URL('../database/migrations/001_schema.sql', import.meta.url),
+        new URL(initialMigration, migrationsDir),
         'utf8'
     );
 
@@ -34,12 +37,13 @@ try {
     const [tableRows] = await connection.query(
         `SELECT TABLE_NAME AS tableName
          FROM information_schema.tables
-         WHERE table_schema = DATABASE()`
+         WHERE table_schema = DATABASE() AND TABLE_NAME <> '_migracoes_teste'`
     );
     const existingTables = new Set(tableRows.map((row) => row.tableName));
 
     if (existingTables.size === 0) {
         await connection.query(schema);
+        console.log(`Migração executada: ${initialMigration}`);
     } else {
         const missingTables = expectedTables.filter(
             (table) => !existingTables.has(table)
@@ -49,6 +53,26 @@ try {
                 `Schema incompleto; faltam tabelas: ${missingTables.join(', ')}.`
             );
         }
+    }
+
+    await connection.query(
+        'CREATE TABLE IF NOT EXISTS _migracoes_teste (nome VARCHAR(255) PRIMARY KEY)'
+    );
+    const [aplicadas] = await connection.query(
+        'SELECT nome FROM _migracoes_teste'
+    );
+    const nomesAplicados = new Set(aplicadas.map(({ nome }) => nome));
+
+    for (const migration of migrations) {
+        if (nomesAplicados.has(migration)) continue;
+
+        const sql = await readFile(new URL(migration, migrationsDir), 'utf8');
+        await connection.query(sql);
+        await connection.execute(
+            'INSERT INTO _migracoes_teste (nome) VALUES (?)',
+            [migration]
+        );
+        console.log(`Migração executada: ${migration}`);
     }
 
     for (const [tipo, { usuario: login, senha }] of Object.entries(CONTAS)) {

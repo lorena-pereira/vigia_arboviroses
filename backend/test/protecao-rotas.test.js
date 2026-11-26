@@ -63,6 +63,18 @@ test('sem sessão: atalho /index.html redireciona ao login', async () => {
     assert.equal(r.headers.get('location'), '/');
 });
 
+test('sem sessão: páginas de gestão de usuários redirecionam ao login', async () => {
+    for (const rota of [
+        '/usuarios.html',
+        '/cadastrar-usuario.html',
+        '/editar-usuario.html',
+    ]) {
+        const resposta = await get(rota);
+        assert.equal(resposta.status, 302, rota);
+        assert.equal(resposta.headers.get('location'), '/', rota);
+    }
+});
+
 test('sem sessão: qualquer rota /api/* responde 401 em JSON', async () => {
     const r = await get('/api/pacientes');
     assert.equal(r.status, 401);
@@ -107,6 +119,17 @@ test('com sessão: página interna é entregue', async () => {
     const cookie = await login();
     assert.equal((await get('/html/index.html', cookie)).status, 200);
     assert.equal((await get('/index.html', cookie)).status, 200);
+});
+
+test('com sessão: atalhos para as páginas de gestão de usuários funcionam', async () => {
+    const cookie = await login();
+    for (const rota of [
+        '/usuarios.html',
+        '/cadastrar-usuario.html',
+        '/editar-usuario.html',
+    ]) {
+        assert.equal((await get(rota, cookie)).status, 200, rota);
+    }
 });
 
 test('com sessão: requireAuth deixa passar e expõe req.session', async () => {

@@ -6,14 +6,27 @@ import { app } from '../server.js';
 import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
 import { requireAuth } from '../src/middlewares/requireAuth.js';
-
+import { db } from '../src/config/db.js';
 let server, base;
 
 before(() => {
     server = app.listen(0);
     base = `http://127.0.0.1:${server.address().port}`;
 });
-after(() => server.close());
+after(async () => {
+    await new Promise((resolve, reject) => {
+        server.close((error) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            resolve();
+        });
+    });
+
+    await db.end();
+});
 beforeEach(() => {
     tentativas.clear();
     sessions.clear();

@@ -1,11 +1,8 @@
 async function validarSessao() {
     try {
-        const response = await fetch('/api/session', {
-            method: 'GET',
-            credentials: 'same-origin',
+        const { response, data } = await window.apiFetch('/api/session', {
+            redirectOn401: false,
         });
-
-        const data = await response.json();
 
         if (!response.ok || !data.authenticated) {
             return null;
@@ -33,7 +30,10 @@ async function validarSessao() {
 window.validarSessao = validarSessao;
 
 async function inicializarAutenticacao() {
-    if (window.location.pathname.endsWith('/login.html')) {
+    if (
+        window.location.pathname === '/' ||
+        window.location.pathname.endsWith('/login.html')
+    ) {
         return null;
     }
 

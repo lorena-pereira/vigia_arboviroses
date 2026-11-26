@@ -52,6 +52,7 @@
     if (!sessaoValida) return;
 
     atualizarUsuarioTopo(sessaoValida);
+    window.applySidebarUser?.(sessaoValida);
 
     let sessionExpirationAt =
         Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
@@ -88,22 +89,20 @@
 
     const encerrarSessao = async () => {
         try {
-            if (window.apiFetch) {
-                await window.apiFetch('/logout', {
-                    method: 'POST',
-                    redirectOn401: false,
-                });
-            } else {
-                await fetch('/logout', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                });
+            const { response } = await window.apiFetch('/logout', {
+                method: 'POST',
+                redirectOn401: false,
+            });
+            if (!response.ok) {
+                throw new Error('O servidor não confirmou o encerramento.');
             }
-        } catch (error) {}
-
-        sessionStorage.removeItem('sessionExpirationAt');
-        localStorage.removeItem('usuarioLogado');
-        window.location.replace('../html/login.html');
+        } catch (error) {
+            console.error('Erro ao encerrar sessão:', error);
+        } finally {
+            sessionStorage.removeItem('sessionExpirationAt');
+            localStorage.removeItem('usuarioLogado');
+            window.location.replace('/html/login.html');
+        }
     };
 
     let alertaSessaoExibido = false;
@@ -119,25 +118,15 @@
         if (!renovar) return;
 
         try {
-            const result = window.apiFetch
-                ? await window.apiFetch('/api/session/renew', {
-                      method: 'POST',
-                      redirectOn401: false,
-                  })
-                : await (async () => {
-                      const response = await fetch('/api/session/renew', {
-                          method: 'POST',
-                          credentials: 'same-origin',
-                      });
-                      return {
-                          response,
-                          data: await response.json().catch(() => null),
-                      };
-                  })();
-            const { response, data } = result;
+            const { response, data } = await window.apiFetch(
+                '/api/session/renew',
+                {
+                    method: 'POST',
+                    redirectOn401: false,
+                }
+            );
 
             if (!response.ok || !data?.authenticated) {
-                await encerrarSessao();
                 await encerrarSessao();
                 return;
             }
@@ -189,17 +178,4 @@
     let timerInterval = null;
     atualizarTimerSessao();
     timerInterval = setInterval(atualizarTimerSessao, 1000);
-
-    const logoutBtn = document.getElementById('logout-btn');
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            const confirmar = window.confirm('Deseja encerrar a sessão atual?');
-            if (!confirmar) return;
-
-            await encerrarSessao();
-        });
-    }
 });

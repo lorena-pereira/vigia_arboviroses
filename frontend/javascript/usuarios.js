@@ -13,26 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (userRole) userRole.textContent = 'Administrador';
     if (window.applySidebarUser) window.applySidebarUser(sessao);
 
-    const logout = document.getElementById('logout-btn');
-    logout?.addEventListener('click', async (event) => {
-        event.preventDefault();
-        try {
-            if (window.apiFetch) {
-                await window.apiFetch('/logout', {
-                    method: 'POST',
-                    redirectOn401: false,
-                });
-            } else {
-                await fetch('/logout', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                });
-            }
-        } catch {}
-        localStorage.removeItem('usuarioLogado');
-        window.location.replace('/html/login.html');
-    });
-
     const body = document.getElementById('users-body');
     const search = document.getElementById('filter-search');
     const profile = document.getElementById('filter-profile');
@@ -109,25 +89,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const result = window.apiFetch
-            ? await window.apiFetch('/api/usuarios')
-            : await (async () => {
-                  const response = await fetch('/api/usuarios', {
-                      credentials: 'same-origin',
-                  });
-                  return {
-                      response,
-                      data: await response.json().catch(() => null),
-                  };
-              })();
-        const { response, data } = result;
-        if (!response.ok) throw new Error(data?.message);
+        const { response, data } = await window.apiFetch('/api/usuarios');
+        if (!response.ok)
+            throw new Error(data?.message || 'Erro ao carregar usuários.');
         users = data.users || [];
-    } catch {
+    } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
         body.innerHTML =
             '<tr><td colspan="5">Não foi possível carregar os usuários.</td></tr>';
-        if (window.showToast)
-            window.showToast('Não foi possível carregar os usuários.', 'error');
+        window.showToast('Não foi possível carregar os usuários.', 'error');
     }
 
     search.addEventListener('input', render);

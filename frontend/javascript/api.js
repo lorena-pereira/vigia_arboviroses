@@ -1,22 +1,19 @@
 (function () {
     async function parseResponse(response) {
+        if (response.status === 204) return null;
+
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {
-            try {
-                return await response.json();
-            } catch {
-                return null;
-            }
+            return response.json();
         }
-        try {
-            return await response.text();
-        } catch {
-            return null;
-        }
+        return response.text();
     }
 
     async function apiFetch(url, options) {
-        const opts = Object.assign({ redirectOn401: true }, options || {});
+        const opts = {
+            ...options,
+            redirectOn401: options?.redirectOn401 !== false,
+        };
         const fetchOptions = Object.assign({}, opts);
         delete fetchOptions.redirectOn401;
 
@@ -25,20 +22,31 @@
         }
 
         const response = await fetch(url, fetchOptions);
-        const data = await parseResponse(response);
 
         if (response.status === 401 && opts.redirectOn401) {
             try {
                 localStorage.removeItem('usuarioLogado');
-            } catch {}
+            } catch (error) {
+                console.error(
+                    'Não foi possível limpar os dados locais.',
+                    error
+                );
+            }
             try {
                 sessionStorage.removeItem('sessionExpirationAt');
-            } catch {}
-            if (!String(window.location.pathname).endsWith('/login.html')) {
+            } catch (error) {
+                console.error('Não foi possível limpar a sessão local.', error);
+            }
+
+            const pathname = String(window.location.pathname);
+            const isLoginPage =
+                pathname === '/' || pathname.endsWith('/login.html');
+            if (!isLoginPage) {
                 window.location.replace('/html/login.html');
             }
         }
 
+        const data = await parseResponse(response);
         return { response, data, ok: response.ok, status: response.status };
     }
 

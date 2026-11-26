@@ -8,13 +8,8 @@
     const dataNascimentoInput = document.getElementById('dataDeNascimento');
     const camposDeTexto = ['nome', 'nomeDaMae', 'racaCor', 'escolaridade'];
 
-    // avisos (usa toast compartilhado quando disponível)
     function showWarning(message) {
-        if (window.showToast) {
-            window.showToast(message, 'warning');
-            return;
-        }
-        window.alert(message);
+        window.showToast(message, 'warning');
     }
 
     /* formatações */
@@ -157,6 +152,11 @@
                     const response = await fetch(
                         `https://viacep.com.br/ws/${cepLimpo}/json/`
                     );
+                    if (!response.ok) {
+                        throw new Error(
+                            `Consulta ViaCEP falhou: HTTP ${response.status}`
+                        );
+                    }
                     const data = await response.json();
 
                     if (!data.erro) {
@@ -169,17 +169,17 @@
                         document.getElementById('uf').value = data.uf || 'BA';
                         document.getElementById('numero').focus();
                     } else {
-                        if (window.showToast) {
-                            window.showToast(
-                                'CEP não encontrado na base de dados.',
-                                'warning'
-                            );
-                        } else {
-                            alert('CEP não encontrado na base de dados.');
-                        }
+                        window.showToast(
+                            'CEP não encontrado na base de dados.',
+                            'warning'
+                        );
                     }
                 } catch (error) {
                     console.error('Erro na consulta do CEP:', error);
+                    window.showToast(
+                        'Não foi possível consultar o CEP.',
+                        'error'
+                    );
                 }
             }
         });
@@ -209,45 +209,33 @@
                 );
 
             try {
-                const response = await fetch('/api/pacientes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(pacienteData),
-                });
-
-                const data = await response.json();
+                const { response, data } = await window.apiFetch(
+                    '/api/pacientes',
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(pacienteData),
+                    }
+                );
 
                 if (response.ok && data.success) {
-                    if (window.showToast) {
-                        window.showToast(
-                            'Paciente cadastrado com sucesso!',
-                            'success'
-                        );
-                    } else {
-                        alert('Paciente cadastrado com sucesso!');
-                    }
+                    window.showToast(
+                        'Paciente cadastrado com sucesso!',
+                        'success'
+                    );
                     form.reset();
                 } else {
-                    if (window.showToast) {
-                        window.showToast(
-                            (data && data.message) ||
-                                'Erro ao cadastrar paciente.',
-                            'error'
-                        );
-                    } else {
-                        alert(data.message || 'Erro ao cadastrar paciente.');
-                    }
+                    window.showToast(
+                        data?.message || 'Erro ao cadastrar paciente.',
+                        'error'
+                    );
                 }
             } catch (error) {
                 console.error('Erro de conexão:', error);
-                if (window.showToast) {
-                    window.showToast(
-                        'Não foi possível conectar ao servidor.',
-                        'error'
-                    );
-                } else {
-                    alert('Não foi possível conectar ao servidor.');
-                }
+                window.showToast(
+                    'Não foi possível conectar ao servidor.',
+                    'error'
+                );
             }
         });
     }

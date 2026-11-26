@@ -76,6 +76,31 @@
                 if (parentGroup) parentGroup.classList.toggle('active');
             });
         });
+
+        const logoutButton = sidebar.querySelector('#logout-btn');
+        logoutButton?.addEventListener('click', async (event) => {
+            event.preventDefault();
+            if (!window.confirm('Deseja encerrar a sessão atual?')) return;
+
+            try {
+                const { response } = await window.apiFetch('/logout', {
+                    method: 'POST',
+                    redirectOn401: false,
+                });
+                if (!response.ok) {
+                    throw new Error('Não foi possível encerrar a sessão.');
+                }
+            } catch (error) {
+                console.error('Erro ao encerrar sessão:', error);
+                window.showToast?.(
+                    'Não foi possível confirmar o encerramento da sessão.',
+                    'error'
+                );
+            } finally {
+                clearStoredSession();
+                window.location.replace('/html/login.html');
+            }
+        });
     }
 
     function applySidebarUser(usuario) {
@@ -87,6 +112,19 @@
         });
     }
 
+    function clearStoredSession() {
+        try {
+            localStorage.removeItem('usuarioLogado');
+        } catch (error) {
+            console.error('Não foi possível limpar o usuário local.', error);
+        }
+        try {
+            sessionStorage.removeItem('sessionExpirationAt');
+        } catch (error) {
+            console.error('Não foi possível limpar a sessão local.', error);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         renderSidebar();
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
@@ -94,11 +132,11 @@
         }
 
         try {
-            const stored = JSON.parse(
-                localStorage.getItem('usuarioLogado') || 'null'
-            );
+            const stored = JSON.parse(localStorage.getItem('usuarioLogado'));
             if (stored) applySidebarUser(stored);
-        } catch {}
+        } catch (error) {
+            console.error('Não foi possível carregar o usuário local.', error);
+        }
     });
 
     window.applySidebarUser = applySidebarUser;

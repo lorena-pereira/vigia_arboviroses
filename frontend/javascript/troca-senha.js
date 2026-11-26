@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await window.inicializarAutenticacao();
     if (!sessao) return;
 
@@ -6,15 +6,11 @@
     const nova = document.getElementById('nova-senha');
     const confirmar = document.getElementById('confirmar-senha');
     const atual = document.getElementById('senha-atual');
-    const toast = document.getElementById('toast');
     const checks = document.querySelectorAll('#password-checks li');
     const toggles = document.querySelectorAll('.toggle-password');
 
     function showToast(message, type = 'error') {
-        toast.textContent = message;
-        toast.style.display = 'block';
-        toast.classList.toggle('toast-error', type === 'error');
-        toast.classList.toggle('toast-success', type === 'success');
+        window.showToast(message, type);
     }
 
     function validatePassword() {
@@ -74,22 +70,24 @@
         }
 
         try {
-            const response = await fetch('/api/usuarios/trocar-senha', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    senhaAtual: atual.value,
-                    novaSenha: nova.value,
-                }),
-            });
-            const data = await response.json();
+            const { response, data } = await window.apiFetch(
+                '/api/usuarios/trocar-senha',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        senhaAtual: atual.value,
+                        novaSenha: nova.value,
+                    }),
+                }
+            );
             if (!response.ok)
-                throw new Error(data.message || 'Erro ao redefinir senha.');
+                throw new Error(data?.message || 'Erro ao redefinir senha.');
 
             showToast('Senha redefinida com sucesso.', 'success');
             setTimeout(() => window.location.replace('/index.html'), 900);
         } catch (error) {
+            console.error('Erro ao alterar senha:', error);
             showToast(error.message, 'error');
         }
     });

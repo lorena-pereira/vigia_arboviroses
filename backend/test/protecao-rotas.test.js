@@ -6,26 +6,31 @@ import { app } from '../server.js';
 import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
 import { requireAuth } from '../src/middlewares/requireAuth.js';
-import { db } from '../src/config/db.js';
+import { db, CONTAS, validarBancoTeste } from '../test-support/mysql-test.js';
 let server, base;
 
-before(() => {
-    server = app.listen(0);
+before(async () => {
+    await validarBancoTeste();
+
+    await new Promise((resolve) => {
+        server = app.listen(0, '127.0.0.1', resolve);
+    });
+
     base = `http://127.0.0.1:${server.address().port}`;
 });
 after(async () => {
-    await new Promise((resolve, reject) => {
-        server.close((error) => {
-            if (error) {
-                reject(error);
-                return;
-            }
+    try {
+        if (server) {
+            await new Promise((resolve, reject) => {
+                server.close((erro) => (erro ? reject(erro) : resolve()));
+            });
+        }
+    } finally {
+        sessions.clear();
+        tentativas.clear();
 
-            resolve();
-        });
-    });
-
-    await db.end();
+        await db.end();
+    }
 });
 beforeEach(() => {
     tentativas.clear();
@@ -41,11 +46,18 @@ const get = (p, cookie) =>
 const login = async () => {
     const r = await fetch(base + '/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' }),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(CONTAS.ADMINISTRADOR),
     });
+
+    assert.equal(r.status, 200);
+
     const m = (r.headers.get('set-cookie') || '').match(/sessionId=([^;]+)/);
-    assert.ok(m, 'login não devolveu cookie de sessão');
+
+    assert.ok(m, 'Login não devolveu cookie de sessão');
+
     return `sessionId=${m[1]}`;
 };
 
@@ -61,6 +73,18 @@ test('sem sessão: atalho /index.html redireciona ao login', async () => {
     const r = await get('/index.html');
     assert.equal(r.status, 302);
     assert.equal(r.headers.get('location'), '/');
+});
+
+test('sem sessão: páginas de gestão de usuários redirecionam ao login', async () => {
+    for (const rota of [
+        '/usuarios.html',
+        '/cadastrar-usuario.html',
+        '/editar-usuario.html',
+    ]) {
+        const resposta = await get(rota);
+        assert.equal(resposta.status, 302, rota);
+        assert.equal(resposta.headers.get('location'), '/', rota);
+    }
 });
 
 test('sem sessão: qualquer rota /api/* responde 401 em JSON', async () => {
@@ -107,6 +131,17 @@ test('com sessão: página interna é entregue', async () => {
     const cookie = await login();
     assert.equal((await get('/html/index.html', cookie)).status, 200);
     assert.equal((await get('/index.html', cookie)).status, 200);
+});
+
+test('com sessão: atalhos para as páginas de gestão de usuários funcionam', async () => {
+    const cookie = await login();
+    for (const rota of [
+        '/usuarios.html',
+        '/cadastrar-usuario.html',
+        '/editar-usuario.html',
+    ]) {
+        assert.equal((await get(rota, cookie)).status, 200, rota);
+    }
 });
 
 test('com sessão: requireAuth deixa passar e expõe req.session', async () => {

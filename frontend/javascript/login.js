@@ -1,81 +1,67 @@
-// garante que o script rode após o HTML carregar
 document.addEventListener('DOMContentLoaded', async () => {
-    const usuarioJaLogado = await window.validarSessao?.();
+    const usuarioJaLogado = await window.validarSessao();
     if (usuarioJaLogado) {
         window.location.replace('/index.html');
         return;
     }
 
-    // buscando os elementos HTML
     const loginForm = document.getElementById('login-form');
     const userInput = document.getElementById('user');
     const passwordInput = document.getElementById('password');
     const togglePasswordIcon = document.querySelector('.icon-right');
+    if (!loginForm || !userInput || !passwordInput) return;
 
-    // lógica do ocultamento de senha
-    if (togglePasswordIcon && passwordInput) {
+    if (togglePasswordIcon) {
         togglePasswordIcon.addEventListener('click', () => {
-            const currentType = passwordInput.getAttribute('type');
-
-            if (currentType === 'password') {
-                passwordInput.setAttribute('type', 'text');
-            } else {
-                passwordInput.setAttribute('type', 'password');
-                togglePasswordIcon.style.opacity = '0.5';
-            }
+            const showingPassword = passwordInput.type === 'password';
+            passwordInput.type = showingPassword ? 'text' : 'password';
+            togglePasswordIcon.style.opacity = showingPassword ? '1' : '0.5';
         });
     }
 
-    // envio do formulário e integração com o API
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
         const usuario = userInput.value.trim();
         const senha = passwordInput.value;
-
         if (!usuario || !senha) {
-            alert('Por favor, preencha todos os campos!');
+            window.showToast('Por favor, preencha todos os campos.', 'warning');
             return;
         }
 
         try {
-            // envia a requisição para a API Node.js na porta 3000
-            const response = await fetch('/login', {
+            const { response, data } = await window.apiFetch('/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ usuario, senha }),
+                redirectOn401: false,
             });
 
-            // converte os dados recebidos
-            const data = await response.json();
-
-            // verifica se a resposta teve sucesso
-            if (response.ok && data.success) {
+            if (response.ok && data?.success) {
                 const usuarioLogado = data.user || {
                     nome: usuario,
                     perfil: data.profile || 'Usuário',
                 };
-
                 localStorage.setItem(
                     'usuarioLogado',
                     JSON.stringify(usuarioLogado)
                 );
                 sessionStorage.removeItem('sessionExpirationAt');
-
-                // Redireciona substituindo a página no histórico
                 window.location.replace(data.redirect || '/index.html');
-            } else {
-                alert(data.message || 'Erro ao realizar login.');
-
-                passwordInput.value = '';
-                passwordInput.focus();
+                return;
             }
+
+            window.showToast(
+                data?.message || 'Erro ao realizar login.',
+                'error'
+            );
+            passwordInput.value = '';
+            passwordInput.focus();
         } catch (error) {
             console.error('Erro de conexão:', error);
-            alert(
-                'Não foi possível conectar ao servidor. Verifique se o Back-end está rodando.'
+            window.showToast(
+                'Não foi possível conectar ao servidor. Verifique se o back-end está rodando.',
+                'error'
             );
         }
     });

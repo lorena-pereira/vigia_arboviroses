@@ -5,9 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.replace('/index.html');
         return;
     }
+    if (window.applySidebarUser) window.applySidebarUser(sessao);
 
     const form = document.getElementById('form-usuario');
-    const toast = document.getElementById('toast');
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const data = Object.fromEntries(new FormData(form));
@@ -15,22 +15,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         data.ativo = true;
 
         try {
-            const response = await fetch('/api/usuarios', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify(data),
-            });
-            const result = await response.json();
+            const { response, data: payload } = await window.apiFetch(
+                '/api/usuarios',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                }
+            );
             if (!response.ok)
-                throw new Error(result.message || 'Erro ao cadastrar usuário.');
+                throw new Error(
+                    payload?.message || 'Erro ao cadastrar usuário.'
+                );
 
-            toast.textContent = 'Usuário cadastrado com sucesso.';
-            toast.style.display = 'block';
+            window.showToast('Usuário cadastrado com sucesso.', 'success');
             setTimeout(() => window.location.replace('/usuarios.html'), 900);
         } catch (error) {
-            toast.textContent = error.message;
-            toast.style.display = 'block';
+            console.error('Erro ao cadastrar usuário:', error);
+            window.showToast(error.message, 'error');
         }
     });
 });

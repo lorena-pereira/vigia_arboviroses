@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
+import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
@@ -20,6 +20,10 @@ import {
 import { PERFIS, requireRole } from './src/middlewares/requireRole.js';
 import pacientesRoutes from './src/routes/pacientes.js';
 import usuariosRoutes from './src/routes/usuarios.js';
+import {
+    atualizarUsuario,
+    buscarUsuarioAtivo,
+} from './src/repositories/userRepository.js';
 
 // mantido para quem já importava validarSessao do server.js
 export { validarSessao };
@@ -117,9 +121,11 @@ app.use('/api', requireAuth);
 // Pacientes: só o Técnico (Gestor e Administrador não recebem nome, CPF nem telefone).
 app.use('/api/pacientes', requireRole(PERFIS.TECNICO));
 // Troca da própria senha: disponível para qualquer perfil autenticado.
-app.post('/api/usuarios/trocar-senha', (req, res) => {
-    const senhaAtual = String(req.body?.senhaAtual || '');
-    const novaSenha = String(req.body?.novaSenha || '');
+app.post('/api/usuarios/trocar-senha', async (req, res) => {
+    const senhaAtual =
+        typeof req.body?.senhaAtual === 'string' ? req.body.senhaAtual : '';
+    const novaSenha =
+        typeof req.body?.novaSenha === 'string' ? req.body.novaSenha : '';
     if (!req.session?.usuario || !senhaAtual || !novaSenha) {
         return res.status(400).json({
             success: false,
@@ -133,24 +139,35 @@ app.post('/api/usuarios/trocar-senha', (req, res) => {
         });
     }
 
-    const usersFilePath = new URL('./data/users.json', import.meta.url);
-    const users = JSON.parse(fs.readFileSync(usersFilePath, 'utf-8'));
-    const user = users.find((item) => item.user === req.session.usuario);
-    if (!user || user.password !== senhaAtual) {
-        return res.status(401).json({
+    try {
+        const usuario = await buscarUsuarioAtivo(req.session.usuario);
+        if (
+            !usuario ||
+            !(await bcrypt.compare(senhaAtual, usuario.senha_hash))
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: 'Senha provisória atual inválida.',
+            });
+        }
+
+        const senhaHash = await bcrypt.hash(novaSenha, 10);
+        await atualizarUsuario(usuario.login, {
+            senhaHash,
+            exigeTrocaSenha: false,
+        });
+        req.session.exigeTrocaSenha = false;
+        return res.status(200).json({
+            success: true,
+            message: 'Senha redefinida com sucesso.',
+        });
+    } catch (error) {
+        console.error('Erro ao alterar senha:', error);
+        return res.status(500).json({
             success: false,
-            message: 'Senha provisória atual inválida.',
+            message: 'Erro interno no servidor.',
         });
     }
-
-    user.password = novaSenha;
-    user.exigeTrocaSenha = false;
-    fs.writeFileSync(usersFilePath, `${JSON.stringify(users, null, 4)}\n`);
-    req.session.exigeTrocaSenha = false;
-    return res.status(200).json({
-        success: true,
-        message: 'Senha redefinida com sucesso.',
-    });
 });
 // Gestão de usuários: só o Administrador.
 app.use('/api/usuarios', requireRole(PERFIS.ADMINISTRADOR));
@@ -165,6 +182,20 @@ app.get('/cadastrar-paciente.html', (req, res) => {
     res.sendFile(
         path.join(__dirname, '../frontend/html/cadastrar-paciente.html')
     );
+});
+
+app.get('/usuarios.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/html/usuarios.html'));
+});
+
+app.get('/cadastrar-usuario.html', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, '../frontend/html/cadastrar-usuario.html')
+    );
+});
+
+app.get('/editar-usuario.html', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/html/editar-usuario.html'));
 });
 
 // Renova a expiracao da sessao atual.

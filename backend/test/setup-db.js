@@ -1,14 +1,13 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
+import {
+    CONTAS,
+    validarBancoTeste,
+    validarConfiguracaoBancoTeste,
+} from '../test-support/mysql-test.js';
 
-// Carrega o .env da raiz, quando existir.
-// No GitHub Actions, as variáveis já serão fornecidas pelo workflow.
-dotenv.config({
-    path: fileURLToPath(new URL('../../.env', import.meta.url)),
-});
+validarConfiguracaoBancoTeste();
 
 const connection = await mysql.createConnection({
     host: process.env.DB_HOST || '127.0.0.1',
@@ -20,68 +19,99 @@ const connection = await mysql.createConnection({
 });
 
 try {
-    // Executa todas as migracoes SQL em ordem.
-    const migrationsDir = new URL('../database/migrations/', import.meta.url);
+    await validarBancoTeste(connection);
 
-    const migrations = (await readdir(migrationsDir))
+    const migrationsDir = new URL('../database/migrations/', import.meta.url);
+    const [initialMigration, ...migrations] = (await readdir(migrationsDir))
         .filter((file) => file.endsWith('.sql'))
         .sort();
+    const schema = await readFile(
+        new URL(initialMigration, migrationsDir),
+        'utf8'
+    );
 
-    for (const migration of migrations) {
-        const sql = await readFile(new URL(migration, migrationsDir), 'utf8');
+    const expectedTables = Array.from(
+        schema.matchAll(/\bCREATE\s+TABLE\s+([A-Za-z_]\w*)/gi),
+        (match) => match[1]
+    );
+    const [tableRows] = await connection.query(
+        `SELECT TABLE_NAME AS tableName
+         FROM information_schema.tables
+         WHERE table_schema = DATABASE() AND TABLE_NAME <> '_migracoes_teste'`
+    );
+    const existingTables = new Set(tableRows.map((row) => row.tableName));
 
-        await connection.query(sql);
-
-        console.log(`Migracao executada: ${migration}`);
+    if (existingTables.size === 0) {
+        await connection.query(schema);
+        console.log(`Migração executada: ${initialMigration}`);
+    } else {
+        const missingTables = expectedTables.filter(
+            (table) => !existingTables.has(table)
+        );
+        if (missingTables.length > 0) {
+            throw new Error(
+                `Schema incompleto; faltam tabelas: ${missingTables.join(', ')}.`
+            );
+        }
     }
 
-    // Contas fictícias exclusivas para os testes automatizados.
-    const usuarios = [
-        {
-            nome: 'Administrador de teste',
-            email: 'admin-ci@example.test',
-            perfil: 'ADMINISTRADOR',
-            login: 'admin',
-            senha: 'admin123',
-        },
-        {
-            nome: 'Gestor de teste',
-            email: 'gestor-ci@example.test',
-            perfil: 'GESTOR',
-            login: '111111',
-            senha: '5678',
-        },
-        {
-            nome: 'Técnico de teste',
-            email: 'tecnico-ci@example.test',
-            perfil: 'TECNICO',
-            login: '1202255',
-            senha: '1234',
-        },
-        {
-            nome: 'Endemias de teste',
-            email: 'endemias-ci@example.test',
-            perfil: 'ENDEMIAS',
-            login: '2202308',
-            senha: '2202308',
-        },
-    ];
+    await connection.query(
+        'CREATE TABLE IF NOT EXISTS _migracoes_teste (nome VARCHAR(255) PRIMARY KEY)'
+    );
+    const [aplicadas] = await connection.query(
+        'SELECT nome FROM _migracoes_teste'
+    );
+    const nomesAplicados = new Set(aplicadas.map(({ nome }) => nome));
 
-    for (const usuario of usuarios) {
-        const senhaHash = await bcrypt.hash(usuario.senha, 10);
+    for (const migration of migrations) {
+        if (nomesAplicados.has(migration)) continue;
 
+        const sql = await readFile(new URL(migration, migrationsDir), 'utf8');
+        await connection.query(sql);
         await connection.execute(
-            `INSERT INTO Usuario
-                (nome, email, perfil, ativo, login, senha_hash, deve_trocar_senha)
-             VALUES (?, ?, ?, TRUE, ?, ?, FALSE)`,
-            [
-                usuario.nome,
-                usuario.email,
-                usuario.perfil,
-                usuario.login,
-                senhaHash,
-            ]
+            'INSERT INTO _migracoes_teste (nome) VALUES (?)',
+            [migration]
         );
+        console.log(`Migração executada: ${migration}`);
+    }
+
+    for (const [tipo, { usuario: login, senha }] of Object.entries(CONTAS)) {
+        const nome = `Usuário de teste ${tipo}`;
+        const email = `${login}@example.invalid`;
+        const ativo = tipo !== 'INATIVO';
+        const perfil = ativo ? tipo : 'ADMINISTRADOR';
+        const senhaHash = await bcrypt.hash(senha, 10);
+        const [existentes] = await connection.execute(
+            'SELECT id, login, email FROM Usuario WHERE login = ? OR email = ?',
+            [login, email]
+        );
+
+        if (existentes.length > 0) {
+            const existente = existentes[0];
+            if (
+                existentes.length !== 1 ||
+                existente.login !== login ||
+                existente.email !== email
+            ) {
+                throw new Error(
+                    `Conflito com conta existente ao preparar o usuário de teste ${login}.`
+                );
+            }
+            await connection.execute(
+                `UPDATE Usuario
+                 SET nome = ?, perfil = ?, ativo = ?, senha_hash = ?,
+                     deve_trocar_senha = FALSE
+                 WHERE id = ?`,
+                [nome, perfil, ativo, senhaHash, existente.id]
+            );
+        } else {
+            await connection.execute(
+                `INSERT INTO Usuario
+                    (nome, email, perfil, ativo, login, senha_hash, deve_trocar_senha)
+                 VALUES (?, ?, ?, ?, ?, ?, FALSE)`,
+                [nome, email, perfil, ativo, login, senhaHash]
+            );
+        }
     }
 
     console.log('Schema e usuários de teste preparados com sucesso.');

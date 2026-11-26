@@ -44,11 +44,11 @@ O seed cria contas de demonstração usando hashes scrypt. As credenciais de dem
 ### Testes
 
 ```bash
-cd backend
-npm test
+docker compose -f docker-compose.test.yml run --rm --build test
+docker compose -f docker-compose.test.yml down
 ```
 
-Os testes unitários não exigem MySQL. Para testar o login HTTP com banco real, suba o Compose, aplique a migração e execute o seed.
+Execute os comandos na raiz do repositório com o Docker em execução. O Compose aguarda o MySQL 8.4, aplica o schema e cria contas fictícias antes de rodar a suíte. O banco roda sem portas publicadas e seus dados são descartados ao encerrar o ambiente de testes. O GitHub Actions executa a suíte com o mesmo Compose.
 
 ## Arquitetura do backend
 

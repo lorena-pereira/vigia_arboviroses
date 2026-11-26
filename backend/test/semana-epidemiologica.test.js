@@ -1,6 +1,10 @@
-import test, { after } from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { db } from '../src/config/db.js';
+import { db, validarBancoTeste } from '../test-support/mysql-test.js';
+
+before(async () => {
+    await validarBancoTeste();
+});
 
 after(async () => {
     await db.end();
@@ -40,9 +44,6 @@ test('SE: calcula corretamente as datas de referencia', async () => {
 });
 
 test('SE: calcula e atualiza automaticamente os campos da notificacao', async (t) => {
-    // Impede alteracoes no banco de desenvolvimento ou producao.
-    assert.equal(process.env.DB_NAME, 'vigia_test');
-
     const connection = await db.getConnection();
 
     try {

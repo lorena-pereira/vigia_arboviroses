@@ -14,53 +14,38 @@ Implementar testes automatizados de autorização para os quatro perfis do Siste
 
 ## 3. Implementação
 
-Foi criado o arquivo `backend/test/permissoes.test.js`, utilizando o módulo nativo de testes do Node.js.
+O arquivo `backend/test/permissoes.test.js` usa o módulo nativo de testes do Node.js e envia requisições ao servidor Express.
 
-Os testes realizam requisições HTTP ao servidor Express, utilizando sessões fictícias para representar os perfis:
+Os testes fazem login pela API com contas fictícias preparadas no MySQL 8.4 isolado no Docker. As requisições usam os cookies de sessão emitidos pelo servidor para os quatro perfis.
 
 - Administrador;
 - Técnico de Vigilância;
 - Gestor;
 - Endemias.
 
-Não foram realizadas alterações nos middlewares existentes, no banco de dados ou no frontend.
-
 ## 4. Cenários testados
 
-- Tentativas de acesso à gestão de usuários por Técnico, Gestor e Endemias.
-- Tentativas de acesso aos dados individuais de pacientes por Administrador, Gestor e Endemias.
-- Requisições utilizando GET, POST, PUT, PATCH e DELETE.
-- Validação do retorno HTTP 403.
-- Verificação da ausência de dados sensíveis nas respostas de acesso negado.
-- Validação do retorno HTTP 401 para requisições sem sessão.
+- Técnico, Gestor e Endemias recebem HTTP 403 ao tentar listar, consultar, criar, editar, ativar, desativar, atribuir perfil ou redefinir a senha de uma conta. A lista inclui `PUT` e `PATCH` para edição, `POST` e `PATCH` para redefinição de senha e `HEAD` nas rotas de leitura.
+- Administrador, Gestor e Endemias recebem HTTP 403 nas tentativas de cadastrar paciente, listar pacientes, consultar um registro ou buscar por CPF.
+- As respostas HTTP 403 em JSON contêm apenas `authenticated` e a mensagem genérica. As respostas a `HEAD` têm corpo vazio.
+- A tentativa de exclusão física recebe HTTP 403 para os perfis sem acesso à gestão. Para Administrador, o servidor responde HTTP 404 e a conta continua disponível para consulta, cuja resposta contém apenas os campos públicos de gestão.
+- Os quatro perfis alcançam a validação da rota de troca da própria senha. As rotas protegidas continuam respondendo HTTP 401 sem sessão.
 
-## 5. Resultados de referência
+## 5. Resultados em 26/11/2026
 
 | Verificação | Resultado |
 |---|---|
-| Testes da Subtask 8.5 | 44 aprovados |
+| Testes da Subtask 8.5 | 58 aprovados |
 | Testes com falha | 0 |
 | Testes ignorados | 0 |
-| Suíte completa | 79 aprovados |
-| ESLint do novo arquivo | Aprovado |
-| Prettier do novo arquivo | Aprovado |
-
-Resultados obtidos em uma cópia da versão original disponibilizada para desenvolvimento da subtask.
+| Suíte completa | 112 aprovados |
+| ESLint | Aprovado |
+| Prettier | Aprovado |
 
 ## 6. Evidências
 
-Os resultados da execução local devem ser registrados no arquivo `EVIDENCIA_SUBTASK_6_8_5.txt` e anexados ao respectivo cartão do Trello.
+O arquivo [EVIDENCIA_SUBTASK_6_8_5.txt](EVIDENCIA_SUBTASK_6_8_5.txt) registra a saída dos testes e os comandos de reprodução.
 
-## 7. Observações e dependências
+## 7. Escopo das rotas de pacientes
 
-O prefixo `/api/usuarios` encontra-se protegido pelo middleware de autorização. Entretanto, na versão analisada, o módulo completo de gestão de usuários ainda não está implementado.
-
-Após a disponibilização do módulo, os caminhos e métodos definitivos deverão ser comparados com os testes desenvolvidos.
-
-A tentativa de exclusão física foi incluída como cenário negativo de autorização, não representando uma funcionalidade permitida pela matriz.
-
-## 8. Conclusão
-
-Os testes desenvolvidos comprovaram que os middlewares existentes bloqueiam as requisições não autorizadas nos caminhos testados, retornando HTTP 403 sem exposição de dados sensíveis.
-
-A validação dos endpoints definitivos de gestão de usuários permanece condicionada à disponibilização do respectivo módulo.
+Em `/api/pacientes`, o cadastro via `POST` está implementado. Os testes de `GET` verificam o bloqueio pelo middleware do prefixo, que também se aplica a caminhos de consulta e busca.

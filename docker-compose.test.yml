@@ -1,0 +1,57 @@
+name: vigia-arboviroses-test
+
+services:
+    db-test:
+        image: mysql:8.4
+
+        environment:
+            MYSQL_ROOT_PASSWORD: root_teste_local
+            MYSQL_DATABASE: vigia_arboviroses_test
+            MYSQL_USER: vigia_test
+            MYSQL_PASSWORD: senha_teste_local
+
+        tmpfs:
+            - /var/lib/mysql
+
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - >-
+                    MYSQL_PWD="$$MYSQL_PASSWORD"
+                    mysql --protocol=TCP
+                    -h 127.0.0.1
+                    -u "$$MYSQL_USER"
+                    "$$MYSQL_DATABASE"
+                    -e 'SELECT 1'
+                    >/dev/null 2>&1
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 60s
+
+    test:
+        build:
+            context: .
+            dockerfile: Dockerfile
+
+        init: true
+
+        environment:
+            NODE_ENV: test
+            DB_HOST: db-test
+            DB_PORT: '3306'
+            DB_NAME: vigia_arboviroses_test
+            DB_USER: vigia_test
+            DB_PASSWORD: senha_teste_local
+
+        volumes:
+            - ./frontend:/app/frontend:ro
+
+        depends_on:
+            db-test:
+                condition: service_healthy
+
+        command:
+            - sh
+            - -c
+            - node test/setup-db.js && npm test

@@ -6,26 +6,31 @@ import { app } from '../server.js';
 import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
 import { requireAuth } from '../src/middlewares/requireAuth.js';
-import { db } from '../src/config/db.js';
+import { db, CONTAS, validarBancoTeste } from '../test-support/mysql-test.js';
 let server, base;
 
-before(() => {
-    server = app.listen(0);
+before(async () => {
+    await validarBancoTeste();
+
+    await new Promise((resolve) => {
+        server = app.listen(0, '127.0.0.1', resolve);
+    });
+
     base = `http://127.0.0.1:${server.address().port}`;
 });
 after(async () => {
-    await new Promise((resolve, reject) => {
-        server.close((error) => {
-            if (error) {
-                reject(error);
-                return;
-            }
+    try {
+        if (server) {
+            await new Promise((resolve, reject) => {
+                server.close((erro) => (erro ? reject(erro) : resolve()));
+            });
+        }
+    } finally {
+        sessions.clear();
+        tentativas.clear();
 
-            resolve();
-        });
-    });
-
-    await db.end();
+        await db.end();
+    }
 });
 beforeEach(() => {
     tentativas.clear();
@@ -41,11 +46,18 @@ const get = (p, cookie) =>
 const login = async () => {
     const r = await fetch(base + '/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' }),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(CONTAS.ADMINISTRADOR),
     });
+
+    assert.equal(r.status, 200);
+
     const m = (r.headers.get('set-cookie') || '').match(/sessionId=([^;]+)/);
-    assert.ok(m, 'login não devolveu cookie de sessão');
+
+    assert.ok(m, 'Login não devolveu cookie de sessão');
+
     return `sessionId=${m[1]}`;
 };
 

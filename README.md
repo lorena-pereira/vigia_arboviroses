@@ -50,6 +50,30 @@ docker compose -f docker-compose.test.yml down
 
 Execute os comandos na raiz do repositório com o Docker em execução. O Compose aguarda o MySQL 8.4, aplica o schema e cria contas fictícias antes de rodar a suíte. O banco roda sem portas publicadas e seus dados são descartados ao encerrar o ambiente de testes. O GitHub Actions executa a suíte com o mesmo Compose.
 
+### API de notificações
+
+O Técnico de Vigilância usa o cookie de sessão retornado por `POST /login` para acessar `/api/notificacoes`.
+
+- `POST /api/notificacoes` grava a notificação e retorna HTTP 201 com o objeto em `notificacao`. Informe um número SINAN único e IDs de paciente, agravo e unidade existentes no MySQL.
+- `GET /api/notificacoes` retorna o array `notificacoes`, com os registros mais recentes por ID primeiro. Use `pagina` e `limite` para navegar. Os padrões são página 1 e 50 registros, com limite máximo de 100.
+
+```json
+{
+    "numero_sinan": "000123",
+    "paciente_id": 1,
+    "agravo_id": 1,
+    "unidade_id": 1,
+    "data_notificacao": "2025-01-02",
+    "data_1_sintoma": "2024-12-31"
+}
+```
+
+Uma notificação criada pela API recebe `status: "PROVAVEL"`. O MySQL calcula a semana e o ano epidemiológico a partir de `data_1_sintoma`. Se essa data for omitida ou enviada como `null`, os campos epidemiológicos também retornam `null`. Registros já existentes podem ter status desconhecido, representado por `null`.
+
+O vínculo usa o ID da tabela `Paciente` do MySQL. A integração do formulário de pacientes com essa tabela é tratada na subtask 9.2.
+
+Em um banco já inicializado, aplique as migrações pendentes `002_semana_epidemiologica.sql` e `003_status_notificacao.sql`, nessa ordem, antes de iniciar a API. Um banco novo criado pelo Compose aplica as duas durante a inicialização.
+
 ## Arquitetura do backend
 
 - `src/routes`: definição de endpoints.

@@ -18,6 +18,7 @@ import {
     validarSessao,
 } from './src/middlewares/requireAuth.js';
 import { PERFIS, requireRole } from './src/middlewares/requireRole.js';
+import notificacoesRoutes from './src/routes/notificacoes.js';
 import pacientesRoutes from './src/routes/pacientes.js';
 import usuariosRoutes from './src/routes/usuarios.js';
 import {
@@ -120,6 +121,7 @@ app.use('/api', requireAuth);
 // Aplicada por prefixo: qualquer rota criada depois dentro desses caminhos já nasce restrita.
 // Pacientes: só o Técnico (Gestor e Administrador não recebem nome, CPF nem telefone).
 app.use('/api/pacientes', requireRole(PERFIS.TECNICO));
+app.use('/api/notificacoes', requireRole(PERFIS.TECNICO), notificacoesRoutes);
 // Troca da própria senha: disponível para qualquer perfil autenticado.
 app.post('/api/usuarios/trocar-senha', async (req, res) => {
     const senhaAtual =

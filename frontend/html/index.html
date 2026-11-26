@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
     <head>
         <meta charset="UTF-8" />
@@ -8,83 +8,37 @@
         <link rel="stylesheet" href="../css/index.css" />
         <script src="https://unpkg.com/lucide@latest"></script>
         <script src="../javascript/auth.js"></script>
+        <script src="../javascript/toast.js"></script>
+        <script src="../javascript/api.js"></script>
     </head>
     <body>
         <div class="app-container">
-            <!-- menu lateral -->
-            <aside class="sidebar">
-                <div class="sidebar-header">
-                    <div class="brand-icon">
-                        <i data-lucide="activity"></i>
-                    </div>
-                    <h2>Vigia<br />Arboviroses</h2>
-                </div>
+            <aside class="sidebar" data-shared-sidebar></aside>
 
-                <nav class="sidebar-nav">
-                    <a href="/index.html" class="nav-item active">
-                        <i data-lucide="layout-dashboard"></i>
-                        <span>Painel Geral</span>
-                    </a>
-
-                    <!-- pacientes -->
-                    <div class="nav-item-group active">
-                        <button class="nav-item-toggle">
-                            <div class="toggle-left">
-                                <i data-lucide="users"></i>
-                                <span>Pacientes</span>
-                            </div>
-                            <i
-                                data-lucide="chevron-down"
-                                class="arrow-icon"
-                            ></i>
-                        </button>
-                        <div class="nav-submenu">
-                            <a
-                                href="cadastrar-paciente.html"
-                                class="submenu-item"
-                                >Cadastrar Paciente</a
-                            >
-                        </div>
-                    </div>
-
-                    <a href="#" class="nav-item">
-                        <i data-lucide="file-text"></i>
-                        <span>Notificações</span>
-                    </a>
-                </nav>
-
-                <div class="sidebar-footer">
-                    <a href="#" id="logout-btn" class="nav-item logout-btn">
-                        <i data-lucide="log-out"></i>
-                        <span>Encerrar sessão</span>
-                    </a>
-                </div>
-            </aside>
-
-            <!-- conteúdo principal -->
+            <!-- conteÃºdo principal -->
             <main class="main-content">
-                <!-- cabeçalho -->
+                <!-- cabeÃ§alho -->
                 <header class="topbar">
                     <div class="page-title">
-                        <h1>Visão Geral Epidemiológica</h1>
-                        <p>Município: Vitória da Conquista - BA</p>
+                        <h1>VisÃ£o Geral EpidemiolÃ³gica</h1>
+                        <p>MunicÃ­pio: VitÃ³ria da Conquista - BA</p>
                     </div>
 
-                    <!-- perfil do usuário logado -->
+                    <!-- perfil do usuÃ¡rio logado -->
                     <div class="user-profile">
                         <div class="avatar">
                             <i data-lucide="user"></i>
                         </div>
                         <div class="user-info">
                             <span id="user-name">Carregando...</span>
-                            <small id="user-role">Vigilância</small>
+                            <small id="user-role">VigilÃ¢ncia</small>
                         </div>
                     </div>
                 </header>
 
-                <!-- conteúdo do dashboard -->
+                <!-- conteÃºdo do dashboard -->
                 <div class="dashboard-content">
-                    <!-- cards de estatísticas -->
+                    <!-- cards de estatÃ­sticas -->
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-header">
@@ -99,18 +53,18 @@
 
                         <div class="stat-card">
                             <div class="stat-header">
-                                <h3>Casos Prováveis (Ativos)</h3>
+                                <h3>Casos ProvÃ¡veis (Ativos)</h3>
                                 <div class="icon-wrapper red">
                                     <i data-lucide="alert-triangle"></i>
                                 </div>
                             </div>
                             <div class="stat-value">320</div>
-                            <div class="stat-desc">Aguardando investigação</div>
+                            <div class="stat-desc">Aguardando investigaÃ§Ã£o</div>
                         </div>
 
                         <div class="stat-card">
                             <div class="stat-header">
-                                <h3>Denúncias Abertas</h3>
+                                <h3>DenÃºncias Abertas</h3>
                                 <div class="icon-wrapper yellow">
                                     <i data-lucide="map-pin"></i>
                                 </div>
@@ -125,11 +79,12 @@
             </main>
         </div>
 
-        <script>
-            lucide.createIcons();
-        </script>
-
-        <script src="../javascript/index.js"></script>
         <script src="../javascript/sidebar.js"></script>
+        <script src="../javascript/index.js"></script>
+        <script>
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        </script>
     </body>
 </html>

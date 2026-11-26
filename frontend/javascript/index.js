@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
+﻿document.addEventListener('DOMContentLoaded', async () => {
     const usuarioLogado = JSON.parse(
         localStorage.getItem('usuarioLogado') || 'null'
     );
@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!sessaoValida) return;
 
     atualizarUsuarioTopo(sessaoValida);
+    window.applySidebarUser?.(sessaoValida);
 
     let sessionExpirationAt =
         Date.now() + (Number(sessaoValida.expiresInMs) || 30 * 60 * 1000);
@@ -88,17 +89,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const encerrarSessao = async () => {
         try {
-            await fetch('/logout', {
+            const { response } = await window.apiFetch('/logout', {
                 method: 'POST',
-                credentials: 'same-origin',
+                redirectOn401: false,
             });
+            if (!response.ok) {
+                throw new Error('O servidor não confirmou o encerramento.');
+            }
         } catch (error) {
             console.error('Erro ao encerrar sessão:', error);
+        } finally {
+            sessionStorage.removeItem('sessionExpirationAt');
+            localStorage.removeItem('usuarioLogado');
+            window.location.replace('/html/login.html');
         }
-
-        sessionStorage.removeItem('sessionExpirationAt');
-        localStorage.removeItem('usuarioLogado');
-        window.location.replace('../html/login.html');
     };
 
     let alertaSessaoExibido = false;
@@ -114,13 +118,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!renovar) return;
 
         try {
-            const response = await fetch('/api/session/renew', {
-                method: 'POST',
-                credentials: 'same-origin',
-            });
-            const data = await response.json();
+            const { response, data } = await window.apiFetch(
+                '/api/session/renew',
+                {
+                    method: 'POST',
+                    redirectOn401: false,
+                }
+            );
 
-            if (!response.ok || !data.authenticated) {
+            if (!response.ok || !data?.authenticated) {
                 await encerrarSessao();
                 return;
             }
@@ -131,10 +137,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 String(sessionExpirationAt)
             );
             alertaSessaoExibido = false;
-            window.alert('Sessão renovada com sucesso!');
+            if (window.showToast) {
+                window.showToast('Sessão renovada com sucesso!', 'success');
+            }
         } catch (error) {
             console.error('Erro ao renovar sessão:', error);
-            window.alert('Não foi possível renovar a sessão.');
+            if (window.showToast) {
+                window.showToast('Não foi possível renovar a sessão.', 'error');
+            }
         }
     };
 
@@ -168,17 +178,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     let timerInterval = null;
     atualizarTimerSessao();
     timerInterval = setInterval(atualizarTimerSessao, 1000);
-
-    const logoutBtn = document.getElementById('logout-btn');
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            const confirmar = window.confirm('Deseja encerrar a sessão atual?');
-            if (!confirmar) return;
-
-            await encerrarSessao();
-        });
-    }
 });

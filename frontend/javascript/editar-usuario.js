@@ -1,6 +1,7 @@
 ﻿document.addEventListener('DOMContentLoaded', async () => {
     const sessao = await window.inicializarAutenticacao();
     if (!sessao) return;
+    if (window.applySidebarUser) window.applySidebarUser(sessao);
     if (sessao.perfil !== 'admin' && sessao.perfil !== 'ADMINISTRADOR') {
         window.location.replace('/index.html');
         return;
@@ -15,7 +16,6 @@
     }
 
     const form = document.getElementById('edit-user-form');
-    const toast = document.getElementById('toast');
     const nomeInput = document.getElementById('edit-nome');
     const emailInput = document.getElementById('edit-email');
     const perfilInput = document.getElementById('edit-perfil');
@@ -24,11 +24,7 @@
     let savedSnapshot = null;
 
     function showToast(message, success = true) {
-        toast.textContent = message;
-        toast.style.background = success ? '#dcfce7' : '#fee2e2';
-        toast.style.color = success ? '#166534' : '#991b1b';
-        toast.style.borderColor = success ? '#86efac' : '#fca5a5';
-        toast.style.display = 'block';
+        window.showToast(message, success ? 'success' : 'error');
     }
 
     function initials(name) {
@@ -67,21 +63,23 @@
             if (isDirty()) {
                 event.preventDefault();
                 event.stopImmediatePropagation();
-                alert(
-                    'Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.'
-                );
+                if (window.showToast) {
+                    window.showToast(
+                        'Você possui alterações não salvas. Salve as alterações antes de acessar outro item do menu.',
+                        'warning'
+                    );
+                }
             }
         },
         true
     );
 
     try {
-        const response = await fetch(
-            `/api/usuarios/${encodeURIComponent(usuario)}`,
-            { credentials: 'same-origin' }
+        const { response, data } = await window.apiFetch(
+            `/api/usuarios/${encodeURIComponent(usuario)}`
         );
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message);
+        if (!response.ok)
+            throw new Error(data?.message || 'Erro ao carregar usuário.');
         const currentUser = data.user;
 
         nomeInput.value = currentUser.nome;
@@ -159,17 +157,18 @@
                 specials[Math.floor(Math.random() * specials.length)];
 
             try {
-                const response = await fetch(
+                const { response, data } = await window.apiFetch(
                     `/api/usuarios/${encodeURIComponent(usuario)}/redefinir-senha`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        credentials: 'same-origin',
                         body: JSON.stringify({ senha: temporaryPassword }),
                     }
                 );
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.message);
+                if (!response.ok)
+                    throw new Error(
+                        data?.message || 'Erro ao redefinir senha.'
+                    );
                 forceResetInput.checked = true;
                 updateStatus();
                 if (savedSnapshot) savedSnapshot.exigeTrocaSenha = true;
@@ -189,17 +188,16 @@
             exigeTrocaSenha: forceResetInput.checked,
         };
         try {
-            const response = await fetch(
+            const { response, data } = await window.apiFetch(
                 `/api/usuarios/${encodeURIComponent(usuario)}`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
                     body: JSON.stringify(payload),
                 }
             );
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
+            if (!response.ok)
+                throw new Error(data?.message || 'Erro ao atualizar usuário.');
             savedSnapshot = getSnapshot();
             showToast(data.message);
             setTimeout(() => window.location.replace('/usuarios.html'), 900);
@@ -207,16 +205,4 @@
             showToast(error.message, false);
         }
     });
-
-    document
-        .getElementById('logout-btn')
-        ?.addEventListener('click', async (event) => {
-            event.preventDefault();
-            await fetch('/logout', {
-                method: 'POST',
-                credentials: 'same-origin',
-            });
-            localStorage.removeItem('usuarioLogado');
-            window.location.replace('/html/login.html');
-        });
 });

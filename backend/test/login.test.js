@@ -1,200 +1,466 @@
-// Rode: npm test  (nao precisa de banco)
+// testes de integração de login e sessão
 import test, { before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+
 import { app } from '../server.js';
-import { sessions } from '../src/sessionStore.js';
+
+import {
+    sessions,
+    SESSION_TIMEOUT_MS,
+    SESSION_WARNING_MS,
+} from '../src/sessionStore.js';
+
 import { tentativas } from '../src/services/authService.js';
-import { db } from '../src/config/db.js';
-let server, base;
-const post = (body) =>
-    fetch(base + '/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    }).then(async (r) => ({ status: r.status, data: await r.json() }));
 
-before(() => {
-    server = app.listen(0);
-    base = `http://127.0.0.1:${server.address().port}`;
-});
-after(async () => {
-    await new Promise((resolve, reject) => {
-        server.close((error) => {
-            if (error) {
-                reject(error);
-                return;
-            }
+import { db, CONTAS, validarBancoTeste } from '../test-support/mysql-test.js';
 
-            resolve();
-        });
-    });
+let server;
+let base;
 
-    await db.end();
-});
-beforeEach(() => tentativas.clear());
+const admin = CONTAS.ADMINISTRADOR;
 
-const loginComCookie = async () => {
-    const r = await fetch(base + '/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: 'admin', senha: 'admin123' }),
-    });
-
-    const setCookie = r.headers.get('set-cookie') || '';
-    const match = setCookie.match(/sessionId=([^;]+)/);
-    assert.ok(match, 'Cookie de sessão não foi enviado no login.');
-
-    return { status: r.status, data: await r.json(), sessionId: match[1] };
+const perfisEsperados = {
+    ADMINISTRADOR: 'admin',
+    TECNICO: 'agente_vigilancia_epidemiologica',
+    GESTOR: 'municipio',
+    ENDEMIAS: 'agente_combate_endemias',
 };
 
-test('credenciais corretas -> 200, perfil e redirect ao dashboard', async () => {
-    const r = await post({ usuario: 'admin', senha: 'admin123' });
-    assert.equal(r.status, 200);
-    assert.equal(r.data.profile, 'admin');
-    assert.equal(r.data.redirect, '/index.html');
+// configuração do ambiente
+before(async () => {
+    await validarBancoTeste();
+
+    await new Promise((resolve) => {
+        server = app.listen(0, '127.0.0.1', resolve);
+    });
+
+    base = `http://127.0.0.1:${server.address().port}`;
 });
 
-test('mensagem de erro e generica (usuario inexistente = senha errada)', async () => {
-    const a = await post({ usuario: 'naoexiste', senha: 'x' });
-    const b = await post({ usuario: 'admin', senha: 'errada' });
-    assert.equal(a.status, 401);
-    assert.equal(b.status, 401);
-    assert.equal(a.data.message, b.data.message);
+beforeEach(() => {
+    tentativas.clear();
+    sessions.clear();
 });
 
-test('campos vazios -> 400', async () => {
-    assert.equal((await post({ usuario: '', senha: '' })).status, 400);
-});
+after(async () => {
+    try {
+        if (server) {
+            await new Promise((resolve, reject) => {
+                server.close((erro) => (erro ? reject(erro) : resolve()));
+            });
+        }
+    } finally {
+        sessions.clear();
+        tentativas.clear();
 
-test('bloqueia na 5a tentativa errada e recusa mesmo com a senha certa', async () => {
-    for (let i = 1; i <= 4; i++) {
-        assert.equal(
-            (await post({ usuario: 'admin', senha: 'errada' })).status,
-            401,
-            `tentativa ${i}`
-        );
+        await db.end();
     }
-    const quinta = await post({ usuario: 'admin', senha: 'errada' });
-    assert.equal(quinta.status, 429);
-    assert.equal(quinta.data.bloqueado, true);
-    assert.equal(
-        (await post({ usuario: 'admin', senha: 'admin123' })).status,
-        429
-    );
 });
 
-test('apos os 15 min o bloqueio expira', async () => {
-    for (let i = 0; i < 5; i++)
-        await post({ usuario: 'admin', senha: 'errada' });
-    tentativas.get('admin').bloqueadoAte = Date.now() - 1000; // simula 15 min depois
-    assert.equal(
-        (await post({ usuario: 'admin', senha: 'admin123' })).status,
-        200
-    );
-    assert.equal(tentativas.has('admin'), false);
-});
+// funções auxiliares
+function requisitar(rota, { metodo = 'GET', cookie, body } = {}) {
+    const headers = {};
 
-test('login certo no meio zera o contador', async () => {
-    for (let i = 0; i < 4; i++)
-        await post({ usuario: 'admin', senha: 'errada' });
-    await post({ usuario: 'admin', senha: 'admin123' });
-    for (let i = 0; i < 4; i++)
-        assert.equal(
-            (await post({ usuario: 'admin', senha: 'errada' })).status,
-            401
-        );
-});
+    if (cookie) {
+        headers.Cookie = cookie;
+    }
 
-test('login cria sessão válida e endpoint de sessão aceita a requisição', async () => {
-    const login = await loginComCookie();
-    assert.equal(login.status, 200);
+    if (body !== undefined) {
+        headers['Content-Type'] = 'application/json';
+    }
 
-    const sessao = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${login.sessionId}` },
+    return fetch(base + rota, {
+        method: metodo,
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+        redirect: 'manual',
     });
+}
 
-    const data = await sessao.json();
-    assert.equal(sessao.status, 200);
-    assert.equal(data.authenticated, true);
-    assert.equal(data.user.nome, 'admin');
-    assert.equal(data.user.perfil, 'admin');
-});
-
-test('municipio nao pode acessar o dashboard pelo servidor', async () => {
-    const login = await fetch(base + '/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario: '111111', senha: '5678' }),
+function login(conta = admin) {
+    return requisitar('/login', {
+        metodo: 'POST',
+        body: conta,
     });
+}
 
-    const setCookie = login.headers.get('set-cookie') || '';
+async function loginComCookie(conta = admin) {
+    const resposta = await login(conta);
+
+    assert.equal(resposta.status, 200);
+
+    const setCookie = resposta.headers.get('set-cookie') || '';
+
     const match = setCookie.match(/sessionId=([^;]+)/);
-    assert.ok(
-        match,
-        'Cookie de sessão não foi enviado para o perfil de município.'
-    );
 
-    const resp = await fetch(base + '/index.html', {
-        headers: { Cookie: `sessionId=${match[1]}` },
+    assert.ok(match, 'Cookie de sessão não foi enviado.');
+
+    assert.match(setCookie, /HttpOnly/i);
+    assert.match(setCookie, /SameSite=Lax/i);
+    assert.match(setCookie, /Path=\//i);
+    assert.match(setCookie, /Max-Age=1800/i);
+
+    await resposta.json();
+    return { sessionId: match[1], cookie: `sessionId=${match[1]}` };
+}
+
+// login válido
+for (const [perfil, esperado] of Object.entries(perfisEsperados)) {
+    test(`${perfil}: login válido retorna HTTP 200`, async () => {
+        const resposta = await login(CONTAS[perfil]);
+
+        assert.equal(resposta.status, 200);
+
+        const data = await resposta.json();
+
+        assert.equal(data.success, true);
+        assert.equal(data.profile, esperado);
+        assert.equal(data.redirect, '/index.html');
+
+        assert.equal(data.user.nome, CONTAS[perfil].usuario);
+
+        assert.equal(data.user.perfil, esperado);
+        assert.equal(data.user.exigeTrocaSenha, false);
+
+        assert.ok(resposta.headers.get('set-cookie'));
+    });
+}
+
+// login inválido
+test('usuário inexistente e senha incorreta retornam erro genérico', async () => {
+    const inexistente = await login({
+        usuario: 'usuario_que_nao_existe',
+        senha: 'SenhaInvalida',
     });
 
-    assert.equal(resp.status, 403);
-    const data = await resp.json();
+    const senhaErrada = await login({
+        usuario: admin.usuario,
+        senha: 'SenhaInvalida',
+    });
+
+    assert.equal(inexistente.status, 401);
+    assert.equal(senhaErrada.status, 401);
+
+    const a = await inexistente.json();
+    const b = await senhaErrada.json();
+
+    assert.deepEqual(a, b);
+
+    assert.deepEqual(a, {
+        success: false,
+        message: 'Usuário ou senha inválidos.',
+    });
+
+    assert.equal(inexistente.headers.get('set-cookie'), null);
+
+    assert.equal(senhaErrada.headers.get('set-cookie'), null);
+
+    assert.equal(sessions.size, 0);
+});
+
+test('campos obrigatórios vazios retornam HTTP 400', async () => {
+    const resposta = await login({
+        usuario: '',
+        senha: '',
+    });
+
+    assert.equal(resposta.status, 400);
+
+    assert.deepEqual(await resposta.json(), {
+        success: false,
+        message: 'Informe usuário e senha.',
+    });
+
+    assert.equal(sessions.size, 0);
+});
+
+test('usuário inativo não consegue realizar login', async () => {
+    const resposta = await login(CONTAS.INATIVO);
+
+    assert.equal(resposta.status, 401);
+
+    assert.deepEqual(await resposta.json(), {
+        success: false,
+        message: 'Usuário ou senha inválidos.',
+    });
+
+    assert.equal(resposta.headers.get('set-cookie'), null);
+
+    assert.equal(sessions.size, 0);
+});
+
+// controle de tentativas
+test('quinta tentativa incorreta bloqueia o usuário', async () => {
+    const contaInvalida = {
+        usuario: admin.usuario,
+        senha: 'SenhaInvalida',
+    };
+
+    for (let i = 0; i < 4; i++) {
+        assert.equal((await login(contaInvalida)).status, 401);
+    }
+
+    const quinta = await login(contaInvalida);
+
+    assert.equal(quinta.status, 429);
+
+    const data = await quinta.json();
+
+    assert.equal(data.bloqueado, true);
+
+    assert.equal((await login()).status, 429);
+
+    assert.equal(sessions.size, 0);
+});
+
+test('após expirar o bloqueio o login volta a funcionar', async () => {
+    const contaInvalida = {
+        usuario: admin.usuario,
+        senha: 'SenhaInvalida',
+    };
+
+    for (let i = 0; i < 5; i++) {
+        await login(contaInvalida);
+    }
+
+    const estado = tentativas.get(admin.usuario);
+
+    assert.ok(estado);
+    assert.ok(estado.bloqueadoAte > Date.now());
+
+    estado.bloqueadoAte = Date.now() - 1000;
+
+    assert.equal((await login()).status, 200);
+
+    assert.equal(tentativas.has(admin.usuario), false);
+});
+
+test('login correto limpa o contador de tentativas', async () => {
+    const contaInvalida = {
+        usuario: admin.usuario,
+        senha: 'SenhaInvalida',
+    };
+
+    for (let i = 0; i < 4; i++) {
+        assert.equal((await login(contaInvalida)).status, 401);
+    }
+
+    assert.equal((await login()).status, 200);
+
+    assert.equal(tentativas.has(admin.usuario), false);
+
+    for (let i = 0; i < 4; i++) {
+        assert.equal((await login(contaInvalida)).status, 401);
+    }
+});
+
+// criação e validação da sessão
+test('login cria cookie e sessão válida de 30 minutos', async () => {
+    const { sessionId, cookie } = await loginComCookie();
+
+    const session = sessions.get(sessionId);
+
+    assert.ok(session);
+    assert.equal(session.usuario, admin.usuario);
+    assert.equal(session.perfil, 'admin');
+    assert.equal(session.exigeTrocaSenha, false);
+
+    assert.ok(session.expiresAt > Date.now());
+
+    assert.equal(SESSION_TIMEOUT_MS, 30 * 60 * 1000);
+
+    assert.ok(
+        Math.abs(session.expiresAt - session.createdAt - SESSION_TIMEOUT_MS) <=
+            1000
+    );
+
+    const resposta = await requisitar('/api/session', { cookie });
+
+    assert.equal(resposta.status, 200);
+
+    const data = await resposta.json();
+
+    assert.equal(data.authenticated, true);
+    assert.equal(data.warning, false);
+
+    assert.equal(data.user.nome, admin.usuario);
+    assert.equal(data.user.perfil, 'admin');
+    assert.equal(data.user.exigeTrocaSenha, false);
+
+    assert.ok(data.expiresInMs > 0);
+
+    assert.ok(data.expiresInMs <= SESSION_TIMEOUT_MS);
+});
+
+// proteção de rota
+test('página protegida exige sessão válida', async () => {
+    const semSessao = await requisitar('/index.html');
+
+    assert.equal(semSessao.status, 302);
+
+    assert.equal(semSessao.headers.get('location'), '/');
+
+    const { cookie } = await loginComCookie();
+
+    const comSessao = await requisitar('/index.html', { cookie });
+
+    assert.equal(comSessao.status, 200);
+});
+
+test('API protegida rejeita cookie de sessão inexistente', async () => {
+    const resposta = await requisitar('/api/pacientes', {
+        cookie: 'sessionId=inexistente',
+    });
+
+    assert.equal(resposta.status, 401);
+
+    const data = await resposta.json();
+
+    assert.equal(data.authenticated, false);
+});
+
+test('gestor não pode acessar o dashboard conforme regra existente', async () => {
+    const { cookie } = await loginComCookie(CONTAS.GESTOR);
+
+    const resposta = await requisitar('/index.html', { cookie });
+
+    assert.equal(resposta.status, 403);
+
+    const data = await resposta.json();
+
     assert.equal(data.accessDenied, true);
     assert.equal(data.perfil, 'municipio');
 });
 
-test('logout encerra a sessão e invalida a validação posterior', async () => {
-    const login = await loginComCookie();
+// logout
+test('logout encerra a sessão e impede reutilização do cookie', async () => {
+    const { sessionId, cookie } = await loginComCookie();
+    const apiAntes = await requisitar('/api/usuarios', { cookie });
+    assert.equal(apiAntes.status, 200);
+    await apiAntes.json();
 
-    const logout = await fetch(base + '/logout', {
-        method: 'POST',
-        headers: { Cookie: `sessionId=${login.sessionId}` },
+    const resposta = await requisitar('/logout', {
+        metodo: 'POST',
+        cookie,
     });
 
-    const logoutData = await logout.json();
-    assert.equal(logout.status, 200);
-    assert.equal(logoutData.success, true);
-
-    const sessaoDepois = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${login.sessionId}` },
+    assert.equal(resposta.status, 200);
+    assert.deepEqual(await resposta.json(), {
+        success: true,
+        redirect: '/html/login.html',
     });
+
+    assert.equal(sessions.has(sessionId), false);
+
+    const cookieLimpo = resposta.headers.get('set-cookie') || '';
+    assert.match(cookieLimpo, /^sessionId=;/);
+    assert.match(cookieLimpo, /(?:^|;\s*)Path=\/(?:;|$)/i);
+    const expiracao = cookieLimpo.match(/Expires=([^;]+)/i);
+    assert.ok(expiracao && Date.parse(expiracao[1]) < Date.now());
+
+    const sessaoDepois = await requisitar('/api/session', { cookie });
 
     assert.equal(sessaoDepois.status, 401);
-    const data = await sessaoDepois.json();
-    assert.equal(data.authenticated, false);
+
+    assert.equal((await sessaoDepois.json()).authenticated, false);
+
+    const apiDepois = await requisitar('/api/usuarios', { cookie });
+
+    assert.equal(apiDepois.status, 401);
+
+    const paginaDepois = await requisitar('/index.html', { cookie });
+
+    assert.equal(paginaDepois.status, 302);
 });
 
-test('sessão expira automaticamente após 30 minutos', async () => {
-    const login = await loginComCookie();
-    const session = sessions.get(login.sessionId);
-    assert.ok(session);
-    assert.ok(session.expiresAt > Date.now());
+// expiração da sessão
+test('sessão expirada é removida e não autoriza acesso', async () => {
+    const { sessionId, cookie } = await loginComCookie();
 
-    session.expiresAt = Date.now() - 1000;
+    sessions.get(sessionId).expiresAt = Date.now() - 1000;
 
-    const resp = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${login.sessionId}` },
-    });
+    const resposta = await requisitar('/api/session', { cookie });
 
-    assert.equal(resp.status, 401);
-    const data = await resp.json();
-    assert.equal(data.authenticated, false);
-    assert.equal(sessions.has(login.sessionId), false);
+    assert.equal(resposta.status, 401);
+
+    assert.equal((await resposta.json()).authenticated, false);
+
+    assert.equal(sessions.has(sessionId), false);
+
+    const pagina = await requisitar('/index.html', { cookie });
+
+    assert.equal(pagina.status, 302);
 });
 
-test('cookie antigo não autoriza acesso após logout', async () => {
-    const login = await loginComCookie();
-    const sessionId = login.sessionId;
+// aviso da expiração
+test('sessão apresenta aviso nos últimos cinco minutos', async () => {
+    const { sessionId, cookie } = await loginComCookie();
 
-    sessions.delete(sessionId);
+    assert.equal(SESSION_WARNING_MS, 5 * 60 * 1000);
 
-    const resp = await fetch(base + '/api/session', {
-        headers: { Cookie: `sessionId=${sessionId}` },
+    sessions.get(sessionId).expiresAt = Date.now() + 4 * 60 * 1000;
+
+    const resposta = await requisitar('/api/session', { cookie });
+
+    assert.equal(resposta.status, 200);
+
+    const data = await resposta.json();
+
+    assert.equal(data.authenticated, true);
+    assert.equal(data.warning, true);
+
+    assert.ok(data.expiresInMs > 0);
+
+    assert.ok(data.expiresInMs <= SESSION_WARNING_MS);
+});
+
+// renovação da sessão
+
+test('sessão válida pode ser renovada para 30 minutos', async () => {
+    const { sessionId, cookie } = await loginComCookie();
+
+    const session = sessions.get(sessionId);
+
+    session.expiresAt = Date.now() + 60 * 1000;
+
+    const expiracaoAnterior = session.expiresAt;
+
+    const resposta = await requisitar('/api/session/renew', {
+        metodo: 'POST',
+        cookie,
     });
 
-    assert.equal(resp.status, 401);
-    const data = await resp.json();
-    assert.equal(data.authenticated, false);
+    assert.equal(resposta.status, 200);
+
+    const data = await resposta.json();
+
+    assert.equal(data.authenticated, true);
+    assert.equal(data.warning, false);
+
+    assert.equal(data.expiresInMs, SESSION_TIMEOUT_MS);
+
+    assert.ok(sessions.get(sessionId).expiresAt > expiracaoAnterior);
+
+    const sessaoRenovada = await requisitar('/api/session', { cookie });
+
+    assert.equal(sessaoRenovada.status, 200);
+
+    assert.equal((await sessaoRenovada.json()).warning, false);
+});
+
+test('sessão expirada não pode ser renovada', async () => {
+    const { sessionId, cookie } = await loginComCookie();
+
+    sessions.get(sessionId).expiresAt = Date.now() - 1000;
+
+    const resposta = await requisitar('/api/session/renew', {
+        metodo: 'POST',
+        cookie,
+    });
+
+    assert.equal(resposta.status, 401);
+
+    assert.equal((await resposta.json()).authenticated, false);
+
     assert.equal(sessions.has(sessionId), false);
 });

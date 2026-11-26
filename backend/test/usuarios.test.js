@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { app } from '../server.js';
 import { SESSION_TIMEOUT_MS, sessions } from '../src/sessionStore.js';
-import { db } from '../src/config/db.js';
+import { db, validarBancoTeste } from '../test-support/mysql-test.js';
 
 let server;
 let base;
@@ -27,6 +27,7 @@ const criarSessao = (usuario, perfil) => {
 let cookieAdmin;
 
 before(async () => {
+    await validarBancoTeste();
     await new Promise((resolve) => {
         server = app.listen(0, '127.0.0.1', resolve);
     });
@@ -35,14 +36,24 @@ before(async () => {
 });
 
 after(async () => {
-    for (const usuario of usuariosCriados) {
-        await db.execute('DELETE FROM Usuario WHERE login = ?', [usuario]);
+    try {
+        for (const usuario of usuariosCriados) {
+            await db.execute('DELETE FROM Usuario WHERE login = ?', [usuario]);
+        }
+    } finally {
+        for (const sessao of sessoesCriadas) sessions.delete(sessao);
+        try {
+            if (server) {
+                await new Promise((resolve, reject) => {
+                    server.close((error) =>
+                        error ? reject(error) : resolve()
+                    );
+                });
+            }
+        } finally {
+            await db.end();
+        }
     }
-    for (const sessao of sessoesCriadas) sessions.delete(sessao);
-    await new Promise((resolve, reject) => {
-        server.close((error) => (error ? reject(error) : resolve()));
-    });
-    await db.end();
 });
 
 async function requisitar(caminho, { method = 'GET', body, cookie } = {}) {

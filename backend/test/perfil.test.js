@@ -5,7 +5,7 @@ import express from 'express';
 import { app } from '../server.js';
 import { sessions } from '../src/sessionStore.js';
 import { tentativas } from '../src/services/authService.js';
-import { db } from '../src/config/db.js';
+import { db, CONTAS, validarBancoTeste } from '../test-support/mysql-test.js';
 import {
     PERFIS,
     normalizarPerfil,
@@ -15,45 +15,48 @@ import {
 
 let server, base;
 
-before(() => {
-    server = app.listen(0);
+before(async () => {
+    await validarBancoTeste();
+    await new Promise((resolve) => {
+        server = app.listen(0, '127.0.0.1', resolve);
+    });
+
     base = `http://127.0.0.1:${server.address().port}`;
 });
 after(async () => {
-    await new Promise((resolve, reject) => {
-        server.close((error) => {
-            if (error) {
-                reject(error);
-                return;
-            }
+    try {
+        if (server) {
+            await new Promise((resolve, reject) => {
+                server.close((erro) => (erro ? reject(erro) : resolve()));
+            });
+        }
+    } finally {
+        sessions.clear();
+        tentativas.clear();
 
-            resolve();
-        });
-    });
-
-    await db.end();
+        await db.end();
+    }
 });
 beforeEach(() => {
     tentativas.clear();
     sessions.clear();
 });
 
-// usuários do backend/data/users.json (um por perfil)
-const CONTAS = {
-    ADMINISTRADOR: { usuario: 'admin', senha: 'admin123' },
-    GESTOR: { usuario: '111111', senha: '5678' },
-    TECNICO: { usuario: '1202255', senha: '1234' },
-    ENDEMIAS: { usuario: '2202308', senha: '2202308' },
-};
-
 const login = async (perfil) => {
     const r = await fetch(base + '/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify(CONTAS[perfil]),
     });
+
+    assert.equal(r.status, 200, `Login de ${perfil} falhou`);
+
     const m = (r.headers.get('set-cookie') || '').match(/sessionId=([^;]+)/);
-    assert.ok(m, `login de ${perfil} falhou`);
+
+    assert.ok(m, `Login de ${perfil} não gerou cookie`);
+
     return `sessionId=${m[1]}`;
 };
 
@@ -81,7 +84,18 @@ for (const [rota, esperado] of Object.entries(MATRIZ)) {
     for (const [perfil, status] of Object.entries(esperado)) {
         test(`${perfil} em ${rota} -> ${status}`, async () => {
             const r = await get(rota, await login(perfil));
-            assert.equal(r.status, status);
+
+            if (r.status !== status) {
+                const resposta = await r.text();
+
+                assert.fail(
+                    `Perfil: ${perfil}\n` +
+                        `Rota: ${rota}\n` +
+                        `Status esperado: ${status}\n` +
+                        `Status recebido: ${r.status}\n` +
+                        `Resposta do servidor: ${resposta}`
+                );
+            }
         });
     }
 }

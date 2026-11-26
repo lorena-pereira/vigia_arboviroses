@@ -26,7 +26,29 @@ try {
         'utf8'
     );
 
-    await connection.query(schema);
+    const expectedTables = Array.from(
+        schema.matchAll(/\bCREATE\s+TABLE\s+([A-Za-z_]\w*)/gi),
+        (match) => match[1]
+    );
+    const [tableRows] = await connection.query(
+        `SELECT TABLE_NAME AS tableName
+         FROM information_schema.tables
+         WHERE table_schema = DATABASE()`
+    );
+    const existingTables = new Set(tableRows.map((row) => row.tableName));
+
+    if (existingTables.size === 0) {
+        await connection.query(schema);
+    } else {
+        const missingTables = expectedTables.filter(
+            (table) => !existingTables.has(table)
+        );
+        if (missingTables.length > 0) {
+            throw new Error(
+                `Schema incompleto; faltam tabelas: ${missingTables.join(', ')}.`
+            );
+        }
+    }
 
     // Contas fictícias exclusivas para os testes automatizados.
     const usuarios = [
@@ -62,19 +84,45 @@ try {
 
     for (const usuario of usuarios) {
         const senhaHash = await bcrypt.hash(usuario.senha, 10);
-
-        await connection.execute(
-            `INSERT INTO Usuario
-                (nome, email, perfil, ativo, login, senha_hash, deve_trocar_senha)
-             VALUES (?, ?, ?, TRUE, ?, ?, FALSE)`,
-            [
-                usuario.nome,
-                usuario.email,
-                usuario.perfil,
-                usuario.login,
-                senhaHash,
-            ]
+        const [existentes] = await connection.execute(
+            `SELECT id, login, email
+             FROM Usuario
+             WHERE login = ? OR email = ?
+             LIMIT 1`,
+            [usuario.login, usuario.email]
         );
+
+        if (existentes.length > 0) {
+            const existente = existentes[0];
+            if (
+                existente.login !== usuario.login ||
+                existente.email !== usuario.email
+            ) {
+                throw new Error(
+                    `Conflito com conta existente ao preparar o usuário de teste ${usuario.login}.`
+                );
+            }
+            await connection.execute(
+                `UPDATE Usuario
+                 SET nome = ?, perfil = ?, ativo = TRUE, senha_hash = ?,
+                     deve_trocar_senha = FALSE
+                 WHERE id = ?`,
+                [usuario.nome, usuario.perfil, senhaHash, existente.id]
+            );
+        } else {
+            await connection.execute(
+                `INSERT INTO Usuario
+                    (nome, email, perfil, ativo, login, senha_hash, deve_trocar_senha)
+                 VALUES (?, ?, ?, TRUE, ?, ?, FALSE)`,
+                [
+                    usuario.nome,
+                    usuario.email,
+                    usuario.perfil,
+                    usuario.login,
+                    senhaHash,
+                ]
+            );
+        }
     }
 
     console.log('Schema e usuários de teste preparados com sucesso.');

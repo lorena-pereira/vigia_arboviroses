@@ -1,26 +1,17 @@
 import { Router } from 'express';
 import {
-    criarNotificacao,
+    buscarNotificacao,
+    salvarNotificacao,
     listarNotificacoes,
 } from '../repositories/notificacaoRepository.js';
 
+import {
+    DadosNotificacaoInvalidos,
+    inteiroPositivo,
+    validarDadosNotificacao,
+} from '../services/dadosNotificacao.js';
+
 const router = Router();
-const MAX_ID = 4294967295;
-
-function inteiroPositivo(valor) {
-    return Number.isInteger(valor) && valor > 0 && valor <= MAX_ID;
-}
-
-function dataValida(valor) {
-    if (typeof valor !== 'string' || !/^[1-9]\d{3}-\d{2}-\d{2}$/.test(valor)) {
-        return false;
-    }
-    const data = new Date(`${valor}T00:00:00Z`);
-    return (
-        !Number.isNaN(data.getTime()) &&
-        data.toISOString().slice(0, 10) === valor
-    );
-}
 
 function parametroInteiro(valor, padrao) {
     if (valor === undefined) return padrao;
@@ -36,79 +27,84 @@ function erroInterno(res, operacao, erro) {
         .json({ success: false, message: 'Erro interno no servidor.' });
 }
 
-router.post('/', async (req, res) => {
-    const {
-        numero_sinan,
-        paciente_id,
-        agravo_id,
-        unidade_id,
-        data_notificacao,
-        data_1_sintoma = null,
-    } = req.body ?? {};
-    const numero = typeof numero_sinan === 'string' ? numero_sinan.trim() : '';
-
-    if (!numero || Array.from(numero).length > 30) {
-        return res.status(400).json({
-            success: false,
-            message: 'Informe um número SINAN de até 30 caracteres.',
-        });
-    }
-
-    if (![paciente_id, agravo_id, unidade_id].every(inteiroPositivo)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Informe IDs válidos de paciente, agravo e unidade.',
-        });
-    }
-
-    if (
-        !dataValida(data_notificacao) ||
-        (data_1_sintoma !== null &&
-            (!dataValida(data_1_sintoma) || data_1_sintoma > data_notificacao))
-    ) {
-        return res.status(400).json({
-            success: false,
-            message:
-                'Use datas válidas no formato AAAA-MM-DD. Os primeiros sintomas devem ser anteriores ou iguais à data da notificação.',
-        });
-    }
-
+async function salvar(req, res, id) {
     try {
-        const notificacao = await criarNotificacao(
-            {
-                numero_sinan: numero,
-                paciente_id,
-                agravo_id,
-                unidade_id,
-                data_notificacao,
-                data_1_sintoma,
-            },
-            req.session.usuario
+        const dados = validarDadosNotificacao(req.body, id !== undefined);
+        const resultado = await salvarNotificacao(
+            dados,
+            req.session.usuario,
+            id
         );
 
-        if (!notificacao) {
+        if (resultado.semPermissao) {
             return res.status(403).json({
                 authenticated: true,
                 message: 'Acesso negado para este perfil.',
             });
         }
-
-        return res.status(201).json({ success: true, notificacao });
+        if (resultado.inexistente) return notificacaoInexistente(res);
+        if (resultado.referenciaInvalida) return referenciaInvalida(res);
+        return res.status(id === undefined ? 201 : 200).json({
+            success: true,
+            notificacao: resultado.notificacao,
+        });
     } catch (erro) {
+        if (erro instanceof DadosNotificacaoInvalidos) {
+            return res
+                .status(400)
+                .json({ success: false, message: erro.message });
+        }
         if (erro.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({
                 success: false,
                 message: 'Já existe uma notificação com esse número SINAN.',
             });
         }
-        if (erro.code === 'ER_NO_REFERENCED_ROW_2') {
-            return res.status(422).json({
-                success: false,
-                message: 'Paciente, agravo ou unidade não encontrado.',
-            });
-        }
-        return erroInterno(res, 'criar', erro);
+        if (erro.code === 'ER_NO_REFERENCED_ROW_2')
+            return referenciaInvalida(res);
+        return erroInterno(res, 'salvar', erro);
     }
+}
+
+function notificacaoInexistente(res) {
+    return res
+        .status(404)
+        .json({ success: false, message: 'Notificação não encontrada.' });
+}
+
+function referenciaInvalida(res) {
+    return res.status(422).json({
+        success: false,
+        message: 'Paciente, agravo, unidade ou endereço não encontrado.',
+    });
+}
+
+function idInvalido(res) {
+    return res.status(400).json({
+        success: false,
+        message: 'Informe um ID válido de notificação.',
+    });
+}
+
+router.post('/', (req, res) => salvar(req, res));
+
+router.get('/:id', async (req, res) => {
+    const id = parametroInteiro(req.params.id);
+    if (!inteiroPositivo(id)) return idInvalido(res);
+
+    try {
+        const notificacao = await buscarNotificacao(id);
+        if (!notificacao) return notificacaoInexistente(res);
+        return res.json({ success: true, notificacao });
+    } catch (erro) {
+        return erroInterno(res, 'consultar', erro);
+    }
+});
+
+router.patch('/:id', (req, res) => {
+    const id = parametroInteiro(req.params.id);
+    if (!inteiroPositivo(id)) return idInvalido(res);
+    return salvar(req, res, id);
 });
 
 router.get('/', async (req, res) => {

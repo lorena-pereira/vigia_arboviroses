@@ -63,6 +63,10 @@ after(async () => {
     try {
         if (fixture.paciente_id) {
             await db.execute(
+                'DELETE e FROM Exame e JOIN Notificacao n ON n.id = e.fk_Notificacao_id WHERE n.fk_Paciente_id = ?',
+                [fixture.paciente_id]
+            );
+            await db.execute(
                 'DELETE FROM Notificacao WHERE fk_Paciente_id = ?',
                 [fixture.paciente_id]
             );
@@ -122,7 +126,7 @@ function requisitar(metodo, { perfil = 'TECNICO', consulta = '', body } = {}) {
     });
 }
 
-test('cria, persiste e lista uma notificação provável com a semana calculada', async () => {
+test('cria, persiste e lista uma notificação ainda sem classificação com a semana calculada', async () => {
     const dados = dadosNotificacao();
     const criacao = await requisitar('POST', {
         body: {
@@ -137,18 +141,33 @@ test('cria, persiste e lista uma notificação provável com a semana calculada'
     const resposta = await criacao.json();
     const { id } = resposta.notificacao;
     assert.ok(Number.isInteger(id) && id > 0);
-    assert.deepEqual(resposta, {
-        success: true,
-        notificacao: {
-            id,
-            ...dados,
-            agravo: 'Agravo fictício para notificações',
-            unidade: 'Unidade fictícia',
-            status: 'PROVAVEL',
-            semana_epidemiologica: 1,
-            ano_epidemiologico: 2025,
-        },
-    });
+    const { notificacao } = resposta;
+    const resumo = Object.fromEntries(
+        [
+            'id',
+            ...Object.keys(dados),
+            'agravo',
+            'unidade',
+            'status',
+            'semana_epidemiologica',
+            'ano_epidemiologico',
+        ].map((campo) => [campo, notificacao[campo]])
+    );
+    assert.deepEqual(
+        { ...resposta, notificacao: resumo },
+        {
+            success: true,
+            notificacao: {
+                id,
+                ...dados,
+                agravo: 'Dengue',
+                unidade: 'Unidade fictícia',
+                status: null,
+                semana_epidemiologica: 1,
+                ano_epidemiologico: 2025,
+            },
+        }
+    );
 
     const [[persistida]] = await db.execute(
         `SELECT n.fk_Paciente_id, n.fk_Doenca_id, n.fk_Unidade_Notificacao_id,
@@ -161,7 +180,7 @@ test('cria, persiste e lista uma notificação provável com a semana calculada'
         fk_Paciente_id: dados.paciente_id,
         fk_Doenca_id: dados.agravo_id,
         fk_Unidade_Notificacao_id: dados.unidade_id,
-        status: 'PROVAVEL',
+        status: null,
         semana_epidemiologica: 1,
         ano_epidemiologico: 2025,
         login: CONTAS.TECNICO.usuario,
@@ -172,7 +191,7 @@ test('cria, persiste e lista uma notificação provável com a semana calculada'
     const { notificacoes } = await listagem.json();
     assert.deepEqual(
         notificacoes.find((registro) => registro.id === id),
-        resposta.notificacao
+        resumo
     );
 });
 
@@ -208,7 +227,7 @@ test('aceita data de primeiros sintomas desconhecida', async () => {
     assert.equal(notificacao.data_1_sintoma, null);
     assert.equal(notificacao.semana_epidemiologica, null);
     assert.equal(notificacao.ano_epidemiologico, null);
-    assert.equal(notificacao.status, 'PROVAVEL');
+    assert.equal(notificacao.status, null);
 });
 
 test('exige número SINAN, IDs positivos e datas válidas em ordem cronológica', async () => {
@@ -238,7 +257,7 @@ test('rejeita referências inexistentes a paciente, agravo ou unidade', async ()
         assert.equal(resposta.status, 422, campo);
         assert.deepEqual(await resposta.json(), {
             success: false,
-            message: 'Paciente, agravo ou unidade não encontrado.',
+            message: 'Paciente, agravo, unidade ou endereço não encontrado.',
         });
     }
 });
@@ -284,6 +303,110 @@ test('restringe criação e listagem ao Técnico de Vigilância', async () => {
                 authenticated: true,
                 message: 'Acesso negado para este perfil.',
             });
+        }
+    }
+});
+
+test('persiste dados clínicos, evolução, exames e classificação e permite reabrir o caso', async () => {
+    const criacao = await requisitar('POST', {
+        body: dadosNotificacao({
+            municipio: 'Município fictício',
+            sinais_alarme: ['Dor abdominal intensa'],
+            exames: [{ tipo_exame: 'NS1' }],
+        }),
+    });
+    assert.equal(criacao.status, 201);
+    const { notificacao: criada } = await criacao.json();
+    const consulta = `/${criada.id}`;
+    const exame = criada.exames[0];
+    const alteracao = await requisitar('PATCH', {
+        consulta,
+        body: {
+            evolucao_caso: 'CURA',
+            classificacao_final: 'DENGUE_COM_SINAIS_DE_ALARME',
+            criterio_confirmacao: 'LABORATORIAL',
+            exames: [
+                {
+                    id: exame.id,
+                    tipo_exame: exame.tipo_exame,
+                    resultado: 'POSITIVO',
+                },
+            ],
+        },
+    });
+    assert.equal(alteracao.status, 200);
+    const reabertura = await requisitar('GET', { consulta });
+    assert.equal(reabertura.status, 200);
+    const { notificacao } = await reabertura.json();
+    assert.deepEqual(notificacao, (await alteracao.json()).notificacao);
+    assert.equal(notificacao.municipio, 'Município fictício');
+    assert.deepEqual(notificacao.sinais_alarme, ['Dor abdominal intensa']);
+    assert.equal(notificacao.evolucao_caso, 'CURA');
+    assert.equal(
+        notificacao.classificacao_final,
+        'DENGUE_COM_SINAIS_DE_ALARME'
+    );
+    assert.equal(notificacao.status, 'CONFIRMADO');
+    assert.equal(notificacao.exames[0].id, exame.id);
+    assert.equal(notificacao.exames[0].resultado, 'POSITIVO');
+
+    const invalida = await requisitar('PATCH', {
+        consulta,
+        body: {
+            evolucao_caso: 'IGNORADO',
+            exames: [{ id: 4294967295, tipo_exame: 'NS1' }],
+        },
+    });
+    assert.equal(invalida.status, 400);
+    const aposFalha = await requisitar('GET', { consulta });
+    assert.deepEqual((await aposFalha.json()).notificacao, notificacao);
+});
+
+test('rejeita classificações inconsistentes e permite confirmar pelo critério clínico-epidemiológico ou descartar', async () => {
+    const criacao = await requisitar('POST', { body: dadosNotificacao() });
+    const { notificacao } = await criacao.json();
+    const consulta = `/${notificacao.id}`;
+    for (const body of [
+        { classificacao_final: 'PROVAVEL' },
+        { classificacao_final: 'DENGUE' },
+        { classificacao_final: 'ZIKA', criterio_confirmacao: 'LABORATORIAL' },
+    ]) {
+        const resposta = await requisitar('PATCH', { consulta, body });
+        assert.equal(resposta.status, 400);
+    }
+    const confirmada = await requisitar('PATCH', {
+        consulta,
+        body: {
+            classificacao_final: 'DENGUE',
+            criterio_confirmacao: 'CLINICO_EPIDEMIOLOGICO',
+        },
+    });
+    assert.equal(confirmada.status, 200);
+    assert.equal(
+        (await confirmada.json()).notificacao.criterio_confirmacao,
+        'CLINICO_EPIDEMIOLOGICO'
+    );
+    const descartada = await requisitar('PATCH', {
+        consulta,
+        body: { classificacao_final: 'DESCARTADO', criterio_confirmacao: null },
+    });
+    assert.equal(descartada.status, 200);
+    assert.equal((await descartada.json()).notificacao.status, 'DESCARTADO');
+});
+
+test('protege a consulta individual e a edição e devolve 404 para caso ausente', async () => {
+    for (const metodo of ['GET', 'PATCH']) {
+        const consulta = '/4294967295';
+        const body = metodo === 'PATCH' ? { evolucao_caso: 'CURA' } : undefined;
+        const ausente = await requisitar(metodo, { consulta, body });
+        assert.equal(ausente.status, 404);
+        for (const perfil of [null, ...perfisBloqueados]) {
+            const bloqueada = await requisitar(metodo, {
+                consulta,
+                body,
+                perfil,
+            });
+            assert.equal(bloqueada.status, perfil ? 403 : 401);
         }
     }
 });

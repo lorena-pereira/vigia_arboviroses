@@ -50,6 +50,12 @@ docker compose -f docker-compose.test.yml down
 
 Execute os comandos na raiz do repositório com o Docker em execução. O Compose aguarda o MySQL 8.4, aplica o schema e cria contas fictícias antes de rodar a suíte. O banco roda sem portas publicadas e seus dados são descartados ao encerrar o ambiente de testes. O GitHub Actions executa a suíte com o mesmo Compose.
 
+Para verificar rapidamente as regras de validação de notificações, execute o comando abaixo na raiz do repositório. Ele exige apenas o Node.js.
+
+```bash
+node --test backend/test/dados-notificacao.test.js
+```
+
 ### API de notificações
 
 O Técnico de Vigilância usa o cookie de sessão retornado por `POST /login` para acessar `/api/notificacoes`.
@@ -68,11 +74,28 @@ O Técnico de Vigilância usa o cookie de sessão retornado por `POST /login` pa
 }
 ```
 
-Uma notificação criada pela API recebe `status: "PROVAVEL"`. O MySQL calcula a semana e o ano epidemiológico a partir de `data_1_sintoma`. Se essa data for omitida ou enviada como `null`, os campos epidemiológicos também retornam `null`. Registros já existentes podem ter status desconhecido, representado por `null`.
+O MySQL calcula a semana e o ano epidemiológico a partir de `data_1_sintoma`. Quando essa data está ausente, os campos epidemiológicos retornam `null`.
 
 O vínculo usa o ID da tabela `Paciente` do MySQL. A integração do formulário de pacientes com essa tabela é tratada na subtask 9.2.
 
-Em um banco já inicializado, aplique as migrações pendentes `002_semana_epidemiologica.sql` e `003_status_notificacao.sql`, nessa ordem, antes de iniciar a API. Um banco novo criado pelo Compose aplica as duas durante a inicialização.
+Em um banco já inicializado, aplique os arquivos pendentes de `backend/database/migrations` em ordem numérica antes de subir a API. A Sprint 7 precisa da migração `004_detalhes_notificacao.sql`. Um volume novo do MySQL recebe as migrações automaticamente pelo Compose.
+
+### API de notificações
+
+As rotas abaixo exigem sessão de **Técnico de Vigilância**. A resposta de criação, consulta individual e edição contém `{ success, notificacao }` com os dados completos do caso.
+
+| Método e rota | Operação |
+| --- | --- |
+| `GET /api/notificacoes` | Listar resumos com `pagina` e `limite`. |
+| `GET /api/notificacoes/:id` | Abrir o caso com seus exames. |
+| `POST /api/notificacoes` | Criar caso. Campos obrigatórios: `numero_sinan`, `paciente_id`, `agravo_id`, `unidade_id` e `data_notificacao`. |
+| `PATCH /api/notificacoes/:id` | Alterar os campos enviados. Omissões preservam os valores atuais. |
+
+Campos opcionais incluem `data_1_sintoma`, `data_investigacao`, `data_encerramento`, `uf`, `municipio`, `endereco_id`, `unidade_acompanhamento_id`, `hospitalizado`, `gestante`, `escolaridade`, `evolucao_caso`, `classificacao_final`, `criterio_confirmacao`, `sinais_alarme`, `sinais_gravidade` e `exames`. As datas usam `AAAA-MM-DD`. Os campos de sinais aceitam listas de textos para dengue.
+
+Para confirmar um caso, envie a classificação do agravo (`DENGUE`, `DENGUE_COM_SINAIS_DE_ALARME`, `DENGUE_GRAVE`, `CHIKUNGUNYA` ou `ZIKA`) e o critério `LABORATORIAL` ou `CLINICO_EPIDEMIOLOGICO`. Para descartar, envie `classificacao_final: "DESCARTADO"` e `criterio_confirmacao: null`. Casos ainda sem classificação retornam `status: null` conforme a decisão da Sprint 7 de retirar “provável”. O servidor calcula `status` e os campos epidemiológicos.
+
+O campo `exames`, quando enviado, representa a lista completa desejada. Envie `id` e `tipo_exame` para manter ou editar um exame existente, ou apenas `tipo_exame` e os campos opcionais para adicionar um novo. Omitir `exames` preserva a lista, e enviar `[]` a limpa. Cada exame pode conter `data_solicitacao`, `data_coleta`, `data_resultado`, `resultado`, `numero_requisicao_gal`, `situacao_exame` e `observacao`. A atualização do caso e dos exames ocorre em uma única transação.
 
 ## Arquitetura do backend
 

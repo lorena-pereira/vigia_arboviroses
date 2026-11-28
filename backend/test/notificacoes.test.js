@@ -34,7 +34,7 @@ before(async () => {
     fixture.unidade_id = unidade.insertId;
 
     const [agravo] = await db.execute('INSERT INTO Doenca (nome) VALUES (?)', [
-        'Agravo fictício para notificações',
+        'Dengue',
     ]);
     fixture.agravo_id = agravo.insertId;
 
